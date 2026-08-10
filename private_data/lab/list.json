@@ -1,0 +1,53 @@
+[
+    {
+        "category": "Linux",
+        "name": "Lab201 - Basic Linux Commands",
+        "file": "lab201.json"
+    },
+    {
+        "category": "Linux",
+        "name": "Lab 202 – Linux File System Navigation and File Management",
+        "file": "lab202.json"
+    },
+    {
+        "category": "Linux",
+        "name": "LAB  203 - Linux Basic Commands & Navigation",
+        "file": "lab203.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 204 - Review Linux File Navigation & Basic Commands",
+        "file": "lab204.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 205 - Linux File Permissions",
+        "file": "lab205.json"
+    },
+
+    {
+        "category": "Amazon Web Services",
+        "name": "Lab101 - Launch an AWS EC2 Linux Instance (Amazon Linux 2023)",
+        "file": "lab101.json"
+    },
+    {
+        "category": "Amazon Web Services",
+        "name": "Lab102 - Launch Multiple AWS EC2 Linux Instances",
+        "file": "lab102.json"
+    },
+    {
+        "category": "Amazon Web Services",
+        "name": "Lab103 - AWS IAM Users, Groups, and Policies",
+        "file": "lab103.json"
+    },
+    {
+        "category": "Amazon Web Services",
+        "name": "Lab104 - AWS IAM Users, Groups, and Policies",
+        "file": "lab104.json"
+    },
+    {
+        "category": "Amazon Web Services",
+        "name": "Lab105 - Amazon S3 Storage Management",
+        "file": "lab105.json"
+    }
+]
