@@ -1,4 +1,1275 @@
 #!/bin/bash
+validate_lab201_commands_sysinfo() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 201 - Linux Basic Commands and System Information..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+
+    TOTAL_TASKS=15
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux Server Information & Navigation"
+    DATE=$(date "+%F %T")
+
+    SERVER_REPORT="$HOME_DIR/server-report"
+    SERVER_REVIEW_REPORT="$HOME_DIR/server-review-report"
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - Login / Identity Information
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -q "^$STUDENT_NAME$" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "uid=" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "gid=" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "groups=" "$SERVER_REPORT" 2>/dev/null; then
+        pass "Task 1: User identity and account information recorded"
+    else
+        fail "Task 1: User identity information is missing from server-report"
+    fi
+
+    # TASK 2 - Present Working Directory
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -Fxq "$HOME_DIR" "$SERVER_REPORT" 2>/dev/null; then
+        pass "Task 2: Home directory path recorded in server-report"
+    else
+        fail "Task 2: Home directory path is missing from server-report"
+    fi
+
+    # TASK 3 - CPU Information
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -q "Architecture:" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "CPU(s):" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "Model name:" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "Core(s) per socket:" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "Thread(s) per core:" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 3: CPU information recorded in server-report"
+    else
+        fail "Task 3: Required CPU information is missing from server-report"
+    fi
+
+    # TASK 4 - Memory Information
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -q "Mem:" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "Swap:" "$SERVER_REPORT" 2>/dev/null; then
+
+        FREE_COUNT=$(grep -c "Mem:" "$SERVER_REPORT" 2>/dev/null)
+        if [ "$FREE_COUNT" -ge 4 ]; then
+            pass "Task 4: Memory information recorded in required formats"
+        else
+            fail "Task 4: Memory information is incomplete"
+        fi
+    else
+        fail "Task 4: Memory information is missing from server-report"
+    fi
+
+    # TASK 5 - Block Devices
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -q "NAME.*MAJ:MIN.*RM.*SIZE" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 5: Block device information recorded in server-report"
+
+    else
+        fail "Task 5: Block device information is missing from server-report"
+    fi
+
+    # TASK 6 - Kernel Information
+    KERNEL_VERSION=$(uname -r 2>/dev/null)
+    if [ -f "$SERVER_REPORT" ] &&
+       [ -n "$KERNEL_VERSION" ] &&
+       grep -Fq "$KERNEL_VERSION" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 6: Kernel information recorded in server-report"
+
+    else
+        fail "Task 6: Kernel information is missing from server-report"
+    fi
+
+    # TASK 7 - Uptime
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -q "load average" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 7: Server uptime and load information recorded"
+
+    else
+        fail "Task 7: Uptime information is missing from server-report"
+    fi
+
+    # TASK 8 - Home Directory Listings
+    TASK8_OK=1
+    if [ ! -f "$SERVER_REPORT" ]; then
+        TASK8_OK=0
+    fi
+
+    if ! grep -q "total " "$SERVER_REPORT" 2>/dev/null; then
+        TASK8_OK=0
+    fi
+
+    if ! grep -q "^.*[rwx-][rwx-][rwx-].*" "$SERVER_REPORT" 2>/dev/null; then
+        TASK8_OK=0
+    fi
+
+    # Hidden files should normally include .bashrc on the lab systems.
+    if [ -f "$HOME_DIR/.bashrc" ] &&
+       ! grep -q "\.bashrc" "$SERVER_REPORT" 2>/dev/null; then
+        TASK8_OK=0
+    fi
+
+    if [ "$TASK8_OK" -eq 1 ]; then
+        pass "Task 8: Normal, detailed and hidden file listings recorded"
+    else
+        fail "Task 8: Required home directory listings are missing"
+    fi
+
+    # TASK 9 - Root Filesystem
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -Fxq "/" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "^etc$" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "^var$" "$SERVER_REPORT" 2>/dev/null &&
+       grep -q "^home$" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 9: Root filesystem location and directory listing recorded"
+
+    else
+        fail "Task 9: Root filesystem information is missing from server-report"
+    fi
+
+    # TASK 10 - Important Linux Directories
+    TASK10_OK=1
+
+    for DIR in /etc /opt /var /home /tmp
+    do
+        if ! grep -Fxq "$DIR" "$SERVER_REPORT" 2>/dev/null; then
+            TASK10_OK=0
+            break
+        fi
+    done
+
+    if [ "$TASK10_OK" -eq 1 ]; then
+        pass "Task 10: Required Linux directory paths recorded"
+    else
+        fail "Task 10: One or more required directory paths are missing"
+    fi
+
+    # TASK 11 - Return to Home Directory
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -Fxq "$HOME_DIR" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 11: Home directory location recorded"
+
+    else
+        fail "Task 11: Home directory location is missing from server-report"
+    fi
+
+    # TASK 12 - Parent Directory
+    PARENT_DIR=$(dirname "$HOME_DIR")
+
+    if [ -f "$SERVER_REPORT" ] &&
+       grep -Fxq "$PARENT_DIR" "$SERVER_REPORT" 2>/dev/null; then
+
+        pass "Task 12: Parent directory location recorded"
+
+    else
+        fail "Task 12: Parent directory location is missing from server-report"
+    fi
+
+    # TASK 13 - /var/log and Two Levels Back
+    TASK13_OK=1
+
+    if ! grep -Fxq "/var/log" "$SERVER_REPORT" 2>/dev/null; then
+        TASK13_OK=0
+    fi
+
+    if ! grep -Fxq "/" "$SERVER_REPORT" 2>/dev/null; then
+        TASK13_OK=0
+    fi
+
+    if [ "$TASK13_OK" -eq 1 ]; then
+        pass "Task 13: /var/log and two-level backward navigation recorded"
+    else
+        fail "Task 13: Required /var/log navigation output is missing"
+    fi
+
+    # TASK 14 - cd -
+    LAST_PATH=$(grep '^/' "$SERVER_REPORT" 2>/dev/null | tail -n 1)
+
+    if [ "$LAST_PATH" = "/var/log" ]; then
+
+        pass "Task 14: Previous directory restored to /var/log"
+
+    else
+        fail "Task 14: Final navigation did not return to /var/log"
+    fi
+
+    # TASK 15 - Basic Server Health Check
+    TASK15_OK=1
+    if [ ! -f "$SERVER_REVIEW_REPORT" ]; then
+        TASK15_OK=0
+    fi
+
+    # Current location / home directory
+    if ! grep -Fxq "$HOME_DIR" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # Username
+    if ! grep -q "^$STUDENT_NAME$" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # CPU
+    if ! grep -q "Architecture:" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # Memory
+    if ! grep -q "Mem:" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # Block storage
+    if ! grep -q "NAME.*MAJ:MIN.*RM.*SIZE" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # Kernel
+    if ! grep -Fq "$KERNEL_VERSION" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    # Uptime
+    if ! grep -q "load average" "$SERVER_REVIEW_REPORT" 2>/dev/null; then
+        TASK15_OK=0
+    fi
+
+    if [ "$TASK15_OK" -eq 1 ]; then
+        pass "Task 15: Basic server health check completed successfully"
+    else
+        fail "Task 15: server-review-report is incomplete"
+    fi
+
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #DCFCE7;
+    color: #166534;
+    border-left: 5px solid #22C55E;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.validation-fail {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-left: 5px solid #EF4444;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.lab-summary {
+    margin-top: 25px;
+    padding: 28px;
+    border-radius: 14px;
+    text-align: center;
+    background: #0f172a;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+    color: white;
+}
+
+.lab-summary-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #38bdf8;
+}
+
+.lab-summary-info {
+    text-align: left;
+    max-width: 650px;
+    margin: 0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight: 700;
+    color: #94a3b8;
+    display: inline-block;
+    min-width: 110px;
+}
+
+.lab-summary-value {
+    color: #ffffff;
+}
+
+.result-percentage {
+    margin-top: 20px;
+    font-size: 42px;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+.result-success {
+    margin-top: 20px;
+    padding: 15px;
+    background: #166534;
+    color: #dcfce7;
+    border: 2px solid #22c55e;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.result-failed {
+    margin-top: 20px;
+    padding: 15px;
+    background: #991b1b;
+    color: #fee2e2;
+    border: 2px solid #ef4444;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+</style>
+HTML
+
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+
+<div class="lab-summary">
+
+    <div class="lab-summary-title">
+        LAB RESULT SUMMARY
+    </div>
+
+    <div class="lab-summary-info">
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Student:
+            </span>
+
+            <span class="lab-summary-value">
+                $STUDENT_NAME
+            </span>
+        </div>
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Lab:
+            </span>
+
+            <span class="lab-summary-value">
+                $LAB_NAME
+            </span>
+        </div>
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Total Tasks:
+            </span>
+
+            <span class="lab-summary-value">
+                $TOTAL_TASKS
+            </span>
+        </div>
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Passed:
+            </span>
+
+            <span class="lab-summary-value">
+                $PASSED
+            </span>
+        </div>
+
+    </div>
+
+    <div class="result-percentage">
+        $PERCENT%
+    </div>
+
+    <div class="$RESULT_CLASS">
+        $RESULT_ICON $RESULT_TEXT
+    </div>
+
+</div>
+
+HTML
+}
+
+# ===============================================================
+
+validate_lab202_linuxfs_navigation_fsmgt() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 202 - Linux File System Navigation and File Management..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/linux_lab"
+
+    TOTAL_TASKS=21
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux File System Navigation and File Management"
+    DATE=$(date "+%F %T")
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+
+    # PART 1 - CREATE DIRECTORY STRUCTURE
+    # TASK 1
+    if [ -d "$BASE" ]; then
+        pass "Task 1: linux_lab directory created in home directory"
+    else
+        fail "Task 1: linux_lab directory is missing from home directory"
+    fi
+
+
+    # TASK 2
+    if [ -d "$BASE" ]; then
+        pass "Task 2: linux_lab directory is available for navigation"
+    else
+        fail "Task 2: linux_lab directory is missing"
+    fi
+
+
+    # TASK 3
+    if [ -d "$BASE/projects" ] &&
+       [ -d "$BASE/backups" ]; then
+        pass "Task 3: projects and backups directories created"
+
+    else
+        fail "Task 3: projects or backups directory is missing"
+    fi
+
+
+    # TASK 4
+    if [ -d "$BASE/projects/project1" ] &&
+       { [ -d "$BASE/projects/project2" ] || [ -d "$BASE/projects/production" ]; }; then
+        pass "Task 4: project1 and project2 directories created"
+
+    else
+        fail "Task 4: project1 or project2 directory is missing"
+    fi
+
+
+    # TASK 5
+    if [ -d "$BASE/documents/scripts" ] &&
+       [ -d "$BASE/reports/notes" ]; then
+        pass "Task 5: documents/scripts and reports/notes directory structures created"
+
+    else
+        fail "Task 5: documents/scripts or reports/notes structure is missing"
+    fi
+
+    # PART 2 - CREATE FILES
+    # TASK 6
+    if [ -f "$BASE/projects/project1/inventory.txt" ]; then
+        if [ ! -s "$BASE/projects/project1/inventory.txt" ]; then
+            pass "Task 6: Empty inventory.txt created inside project1"
+        else
+            fail "Task 6: inventory.txt exists but is not empty"
+        fi
+    else
+        fail "Task 6: inventory.txt is missing from project1"
+    fi
+
+    # TASK 7
+    if [ -f "$BASE/documents/scripts/daily.sh" ]; then
+        if [ ! -s "$BASE/documents/scripts/daily.sh" ]; then
+            pass "Task 7: Empty daily.sh created inside scripts"
+        else
+            fail "Task 7: daily.sh exists but is not empty"
+        fi
+    else
+        fail "Task 7: daily.sh is missing from scripts"
+    fi
+
+
+    # TASK 8
+    if [ -f "$BASE/reports/summary.txt" ]; then
+        if [ ! -s "$BASE/reports/summary.txt" ]; then
+            pass "Task 8: Empty summary.txt created inside reports"
+        else
+            fail "Task 8: summary.txt exists but is not empty"
+        fi
+    else
+        fail "Task 8: summary.txt is missing from reports"
+    fi
+
+
+    # TASK 9
+    EXPECTED_TEXT="Linux is my backbone and I really love Linux."
+    if [ -f "$BASE/projects/project1/users.txt" ] &&
+       [ "$(cat "$BASE/projects/project1/users.txt" 2>/dev/null)" = "$EXPECTED_TEXT" ]; then
+        pass "Task 9: users.txt created with the correct content"
+    else
+        fail "Task 9: users.txt is missing or contains incorrect content"
+    fi
+
+    # PART 3 - COPY FILES
+    # TASK 10
+    if [ -f "$BASE/projects/project1/inventory.txt" ] &&
+       { [ -f "$BASE/projects/project2/inventory_backup.txt" ] ||
+         [ -f "$BASE/projects/production/inventory_backup.txt" ]; }; then
+
+        if [ -f "$BASE/projects/project2/inventory_backup.txt" ] &&
+           cmp -s \
+               "$BASE/projects/project1/inventory.txt" \
+               "$BASE/projects/project2/inventory_backup.txt" 2>/dev/null; then
+
+        pass "Task 10: inventory.txt file copied correctly to project2"
+
+    elif [ -f "$BASE/projects/production/inventory_backup.txt" ] &&
+         cmp -s \
+             "$BASE/projects/project1/inventory.txt" \
+             "$BASE/projects/production/inventory_backup.txt" 2>/dev/null; then
+            pass "Task 10: inventory.txt file copied correctly to project2"
+        else
+            fail "Task 10: project2/inventory.txt does not match project1/inventory.txt"
+        fi
+    else
+        fail "Task 10: inventory.txt file is missing from project1 or project2"
+    fi
+
+    # TASK 11
+    if [ -f "$BASE/projects/project1/users.txt" ]; then
+
+        if [ -f "$BASE/reports/users.txt" ] &&
+           cmp -s \
+               "$BASE/projects/project1/users.txt" \
+               "$BASE/reports/users.txt" 2>/dev/null; then
+
+             pass "Task 11: users.txt copied correctly to reports"
+
+        elif [ -f "$BASE/projects/project2/users.txt" ] &&
+             cmp -s \
+                 "$BASE/projects/project1/users.txt" \
+                 "$BASE/projects/project2/users.txt" 2>/dev/null; then
+
+             pass "Task 11: users.txt copied correctly to reports"
+
+        elif [ -f "$BASE/projects/production/users.txt" ] &&
+             cmp -s \
+                 "$BASE/projects/project1/users.txt" \
+                 "$BASE/projects/production/users.txt" 2>/dev/null; then
+
+             pass "Task 11: users.txt copied correctly to reports"
+
+        else
+             fail "Task 11: users.txt copy is missing or does not match the original"
+        fi   
+
+        else
+             fail "Task 11: Original users.txt is missing from project1"
+        fi    
+
+    # TASK 12
+    if [ -f "$BASE/reports/summary.txt" ] &&
+       [ -f "$BASE/reports/notes/summary.txt" ]; then
+        if cmp -s \
+            "$BASE/reports/summary.txt" \
+            "$BASE/reports/notes/summary.txt" 2>/dev/null; then
+            pass "Task 12: summary.txt copied correctly to notes"
+        else
+            fail "Task 12: notes/summary.txt does not match reports/summary.txt"
+        fi
+    else
+        fail "Task 12: summary.txt is missing from reports or notes"
+    fi
+
+    # TASK 13
+    if [ -f "$BASE/documents/scripts/daily.sh" ] &&
+       [ -f "$BASE/projects/project1/daily.sh" ]; then
+        if cmp -s \
+            "$BASE/documents/scripts/daily.sh" \
+            "$BASE/projects/project1/daily.sh" 2>/dev/null; then
+            pass "Task 13: daily.sh copied correctly into project1"
+        else
+            fail "Task 13: project1/daily.sh does not match scripts/daily.sh"
+        fi
+    else
+        fail "Task 13: daily.sh is missing from scripts or project1"
+    fi
+
+    # TASK 14
+    if [ -d "$BASE/projects/project1" ] &&
+       [ -d "$BASE/backups/project1" ]; then
+        pass "Task 14: project1 directory copied correctly into backups"
+    else
+        fail "Task 14: project1 backup directory is missing"
+    fi
+
+    # PART 4 - MOVE AND RENAME FILES
+    # TASK 15
+    if [ -f "$BASE/projects/project2/inventory_backup.txt" ] &&
+       [ ! -e "$BASE/projects/project2/inventory.txt" ]; then
+        pass "Task 15: inventory.txt renamed to inventory_backup.txt"
+    elif [ -f "$BASE/projects/production/inventory_backup.txt" ] &&
+         [ ! -e "$BASE/projects/production/inventory.txt" ]; then
+        pass "Task 15: inventory.txt renamed to inventory_backup.txt"
+    else
+        fail "Task 15: inventory_backup.txt is missing or inventory.txt still exists"
+    fi
+
+    # TASK 16
+    if [ -f "$BASE/backups/project1/startup.sh" ] &&
+       [ ! -e "$BASE/backups/project1/daily.sh" ]; then
+        pass "Task 16: daily.sh renamed to startup.sh in backup project1"
+    else
+        fail "Task 16: startup.sh is missing or daily.sh was not renamed"
+    fi
+
+    # TASK 17
+    if [ -f "$BASE/projects/project2/users.txt" ] &&
+       [ ! -e "$BASE/reports/users.txt" ]; then
+        pass "Task 17: users.txt moved from reports to project2"
+    elif [ -f "$BASE/projects/production/users.txt" ] &&
+         [ ! -e "$BASE/reports/users.txt" ]; then
+        pass "Task 17: users.txt moved from reports to project2"
+    else
+        fail "Task 17: users.txt was not moved correctly from reports"
+    fi
+
+    # TASK 18
+    if [ -d "$BASE/projects/production" ] &&
+       [ ! -e "$BASE/projects/project2" ]; then
+        pass "Task 18: project2 renamed to production"
+    else
+        fail "Task 18: production directory is missing or project2 still exists"
+    fi
+
+    # PART 5 - ABSOLUTE AND RELATIVE PATH PRACTICE
+    # TASK 19
+    if [ -d "$BASE/reports/notes" ]; then
+        pass "Task 19: notes directory exists at the required absolute path"
+    else
+        fail "Task 19: notes directory is missing"
+    fi
+
+    # TASK 20
+    if [ -d "$BASE" ]; then
+        pass "Task 20: linux_lab directory exists for relative navigation"
+
+    else
+        fail "Task 20: linux_lab directory is missing"
+    fi
+
+    # TASK 21
+    if [ -d "$BASE/projects/production" ]; then
+        pass "Task 21: production directory exists for relative navigation"
+    else
+        fail "Task 21: production directory is missing"
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #DCFCE7;
+    color: #166534;
+    border-left: 5px solid #22C55E;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.validation-fail {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-left: 5px solid #EF4444;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.lab-summary {
+    margin-top: 25px;
+    padding: 28px;
+    border-radius: 14px;
+    text-align: center;
+    background: #0f172a;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+    color: white;
+}
+
+.lab-summary-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #38bdf8;
+}
+
+.lab-summary-info {
+    text-align: left;
+    max-width: 650px;
+    margin: 0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight: 700;
+    color: #94a3b8;
+    display: inline-block;
+    min-width: 110px;
+}
+
+.lab-summary-value {
+    color: #ffffff;
+}
+
+.result-percentage {
+    margin-top: 20px;
+    font-size: 42px;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+.result-success {
+    margin-top: 20px;
+    padding: 15px;
+    background: #166534;
+    color: #dcfce7;
+    border: 2px solid #22c55e;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.result-failed {
+    margin-top: 20px;
+    padding: 15px;
+    background: #991b1b;
+    color: #fee2e2;
+    border: 2px solid #ef4444;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+</style>
+HTML
+
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+
+<div class="lab-summary">
+
+    <div class="lab-summary-title">
+        LAB RESULT SUMMARY
+    </div>
+
+    <div class="lab-summary-info">
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Student:
+            </span>
+
+            <span class="lab-summary-value">
+                $STUDENT_NAME
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Lab:
+            </span>
+
+            <span class="lab-summary-value">
+                $LAB_NAME
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Total Tasks:
+            </span>
+
+            <span class="lab-summary-value">
+                $TOTAL_TASKS
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Passed:
+            </span>
+
+            <span class="lab-summary-value">
+                $PASSED
+            </span>
+        </div>
+
+    </div>
+
+
+    <div class="result-percentage">
+        $PERCENT%
+    </div>
+
+
+    <div class="$RESULT_CLASS">
+        $RESULT_ICON $RESULT_TEXT
+    </div>
+
+</div>
+
+HTML
+
+}
+
+
+# ===========================================================================
+
+validate_lab203_command_navigation() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 203 - Linux Basic Commands & Navigation..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+
+    TOTAL_TASKS=14
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux Basic Commands & Navigation"
+    DATE=$(date "+%F %T")
+
+    SERVER_INFO="$HOME_DIR/server_info"
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # Section 1: Server Info Append to server_info
+
+    # TASK 1
+    if [ -f "$SERVER_INFO" ] &&
+       grep -Eq "^$HOME_DIR/?$" "$SERVER_INFO" 2>/dev/null; then
+
+        pass "Task 1: Current working directory was recorded in server_info"
+    else
+        fail "Task 1: Current working directory output is missing from server_info"
+    fi
+
+    # TASK 2
+    KERNEL_VERSION=$(uname -r 2>/dev/null)
+    if [ -f "$SERVER_INFO" ] &&
+       [ -n "$KERNEL_VERSION" ] &&
+       grep -Fq "$KERNEL_VERSION" "$SERVER_INFO" 2>/dev/null; then
+        pass "Task 2: Kernel version was recorded in server_info"
+    else
+        fail "Task 2: Kernel version output is missing from server_info"
+    fi
+
+    # TASK 3
+    if grep -q "$HOME_DIR" "$SERVER_INFO"; then 
+        pass "Task 3: Detailed directory listing was recorded in server_info"
+    else
+        fail "Task 3: Detailed directory listing is missing from server_info"
+    fi
+
+    # TASK 4
+    if grep -q "\.bashrc" "$SERVER_INFO"; then
+        pass "Task 4: Hidden files were included in detailed listing"
+    else
+        fail "Task 4: Hidden file listing is missing from server_info"
+    fi
+
+    # TASK 5
+    if [ -d "$HOME_DIR/Linux" ]; then
+        pass "Task 5: Linux directory created"
+    else
+        fail "Task 5: Linux directory is missing"
+    fi
+
+    # TASK 6
+    if [ -f "$SERVER_INFO" ] &&
+       grep -Eq "^$HOME_DIR/Linux/?$" "$SERVER_INFO" 2>/dev/null; then
+        pass "Task 6: Linux directory path was recorded in server_info"
+    else
+        fail "Task 6: Linux directory path is missing from server_info"
+    fi
+    
+    # TASK 7
+    if [ -d "$HOME_DIR/Linux/Redhat" ] &&
+       [ -d "$HOME_DIR/Linux/oel" ] &&
+       [ -d "$HOME_DIR/Linux/debian" ]; then
+        pass "Task 7: Redhat, oel and debian directories created"
+    else
+        fail "Task 7: One or more required Linux subdirectories are missing"
+    fi
+
+    # TASK 8
+    if [ -f "$SERVER_INFO" ] &&
+       grep -Eq "^$HOME_DIR/?$" "$SERVER_INFO" 2>/dev/null; then
+        pass "Task 8: Student returned to the home directory"
+    else
+        fail "Task 8: Home directory verification is missing from server_info"
+    fi
+
+    # TASK 9
+    TASK9_OK=1
+
+    for FILE in \
+        "$HOME_DIR/documents/file1.txt" \
+        "$HOME_DIR/images/pic.jpg" \
+        "$HOME_DIR/media/clip.avi"
+    do
+        if [ ! -f "$FILE" ] || [ -s "$FILE" ]; then
+            TASK9_OK=0
+            break
+        fi
+    done
+
+    if [ "$TASK9_OK" -eq 1 ]; then
+        pass "Task 9: file1.txt, pic.jpg and clip.avi created as empty files"
+    else
+        fail "Task 9: Required empty files are missing or contain data"
+    fi
+
+    # TASK 10
+    if [ -f "$HOME_DIR/documents/file1.txt" ] &&
+       [ -f "$HOME_DIR/images/pic.jpg" ] &&
+       [ -f "$HOME_DIR/media/clip.avi" ] &&
+       [ ! -e "$HOME_DIR/file1.txt" ] &&
+       [ ! -e "$HOME_DIR/pic.jpg" ] &&
+       [ ! -e "$HOME_DIR/clip.avi" ]; then
+        pass "Task 10: Files moved into the correct directories"
+    else
+        fail "Task 10: Required directories or file locations are incorrect"
+    fi
+    
+    # TASK 11
+    if [ -d "$HOME_DIR/office" ] &&
+       [ -d "$HOME_DIR/office/hobby" ] &&
+       [ -d "$HOME_DIR/office/hobby/personal" ]; then
+
+        pass "Task 11: Nested office/hobby/personal directory structure created"
+    else
+        fail "Task 11: office/hobby/personal directory structure is incomplete"
+    fi
+
+    # TASK 12
+    if [ -f "$HOME_DIR/documents/file1.txt" ] &&
+       [ -f "$HOME_DIR/office/file1.txt" ]; then
+        if cmp -s \
+            "$HOME_DIR/documents/file1.txt" \
+            "$HOME_DIR/office/file1.txt" 2>/dev/null; then
+            pass "Task 12: file1.txt copied correctly to office"
+        else
+            fail "Task 12: office/file1.txt does not match documents/file1.txt"
+        fi
+    else
+        fail "Task 12: file1.txt is missing from documents or office"
+    fi
+
+    # TASK 13
+    if [ -f "$HOME_DIR/images/pic.jpg" ] &&
+       [ -f "$HOME_DIR/office/hobby/pic.jpg" ]; then
+        if cmp -s \
+            "$HOME_DIR/images/pic.jpg" \
+            "$HOME_DIR/office/hobby/pic.jpg" 2>/dev/null; then
+            pass "Task 13: pic.jpg copied correctly to office/hobby"
+        else
+            fail "Task 13: office/hobby/pic.jpg does not match images/pic.jpg"
+        fi
+    else
+        fail "Task 13: pic.jpg is missing from images or office/hobby"
+    fi
+
+    # TASK 14
+    OFFICE_TREE="$HOME_DIR/office/hobby/personal/office_tree"
+    if [ -f "$OFFICE_TREE" ] &&
+       grep -q "personal" "$OFFICE_TREE" 2>/dev/null; then 
+        pass "Task 14: office directory tree saved correctly in office_tree"
+    else
+        fail "Task 14: office_tree exists but does not contain the expected tree output"
+    fi
+
+# =========================================================
+# SUMMARY
+# =========================================================
+
+PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+    RESULT_CLASS="result-success"
+    RESULT_ICON="✓"
+    RESULT_TEXT="LAB PASSED"
+else
+    RESULT_CLASS="result-failed"
+    RESULT_ICON="✗"
+    RESULT_TEXT="LAB NEEDS ATTENTION"
+fi
+
+# =========================================================
+# RESULT STYLES
+# =========================================================
+cat <<'HTML'
+<style>
+.validation-pass {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #DCFCE7;
+    color: #166534;
+    border-left: 5px solid #22C55E;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.validation-fail {
+    margin: 6px 0;
+    padding: 10px 14px;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-left: 5px solid #EF4444;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.lab-summary {
+    margin-top: 25px;
+    padding: 28px;
+    border-radius: 14px;
+    text-align: center;
+    background: #0f172a;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+    color: white;
+}
+.lab-summary-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #38bdf8;
+}
+.lab-summary-info {
+    text-align: left;
+    max-width: 650px;
+    margin: 0 auto 20px auto;
+}
+.lab-summary-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+}
+.lab-summary-label {
+    font-weight: 700;
+    color: #94a3b8;
+    display: inline-block;
+    min-width: 110px;
+}
+.lab-summary-value {
+    color: #ffffff;
+}
+.result-percentage {
+    margin-top: 20px;
+    font-size: 42px;
+    font-weight: 800;
+    color: #38bdf8;
+}
+.result-success {
+    margin-top: 20px;
+    padding: 15px;
+    background: #166534;
+    color: #dcfce7;
+    border: 2px solid #22c55e;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+.result-failed {
+    margin-top: 20px;
+    padding: 15px;
+    background: #991b1b;
+    color: #fee2e2;
+    border: 2px solid #ef4444;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 700;
+}
+</style>
+HTML
+
+# =========================================================
+# RESULT SUMMARY
+# =========================================================
+
+cat <<HTML
+
+<div class="lab-summary">
+
+    <div class="lab-summary-title">
+        LAB RESULT SUMMARY
+    </div>
+
+    <div class="lab-summary-info">
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Student:
+            </span>
+
+            <span class="lab-summary-value">
+                $STUDENT_NAME
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Lab:
+            </span>
+
+            <span class="lab-summary-value">
+                $LAB_NAME
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Total Tasks:
+            </span>
+
+            <span class="lab-summary-value">
+                $TOTAL_TASKS
+            </span>
+        </div>
+
+
+        <div class="lab-summary-row">
+            <span class="lab-summary-label">
+                Passed:
+            </span>
+
+            <span class="lab-summary-value">
+                $PASSED
+            </span>
+        </div>
+
+    </div>
+
+
+    <div class="result-percentage">
+        $PERCENT%
+    </div>
+
+
+    <div class="$RESULT_CLASS">
+        $RESULT_ICON $RESULT_TEXT
+    </div>
+
+</div>
+
+HTML
+}
+#=================================================================
+
 validate_lab204_review_navigation() {
     set +e
     set +u
@@ -663,3 +1934,288 @@ cat <<HTML
 HTML
 }
 #=================================================================
+
+validate_lab206_file_permissionsII() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 206 - Linux File Permissions II..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/permissions_lab"
+
+    TOTAL_TASKS=7
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux File Permissions"
+    DATE=$(date "+%F %T")
+
+    # HELPERS
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - Directory Structure
+    if [ -d "$BASE" ] &&
+       [ -d "$BASE/application" ] &&
+       [ -d "$BASE/configuration" ] &&
+       [ -d "$BASE/logs" ] &&
+       [ -d "$BASE/scripts" ] &&
+       [ -d "$BASE/reports" ] &&
+       [ -d "$BASE/private" ]; then
+
+        pass "Task 1: permissions_lab directory structure created"
+
+    else
+        fail "Task 1: Required directories are missing"
+    fi
+
+    # TASK 2 - Symbolic Permissions
+    if [ -f "$BASE/scripts/backup.sh" ] &&
+       [ -f "$BASE/scripts/monitor.sh" ] &&
+       [ -f "$BASE/scripts/cleanup.sh" ] &&
+       [ "$(stat -c %a "$BASE/scripts/backup.sh" 2>/dev/null)" = "700" ] &&
+       [ "$(stat -c %a "$BASE/scripts/monitor.sh" 2>/dev/null)" = "755" ] &&
+       [ "$(stat -c %a "$BASE/scripts/cleanup.sh" 2>/dev/null)" = "750" ]; then
+
+        pass "Task 2: Symbolic permissions configured correctly"
+
+    else
+        fail "Task 2: Script permissions are incorrect"
+    fi
+
+    # TASK 3 - Private Directory
+    if [ -d "$BASE/private" ] &&
+       [ -f "$BASE/private/credentials.txt" ] &&
+       [ -f "$BASE/private/keys.txt" ] &&
+       [ "$(stat -c %a "$BASE/private" 2>/dev/null)" = "700" ] &&
+       [ "$(stat -c %a "$BASE/private/credentials.txt" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/private/keys.txt" 2>/dev/null)" = "600" ]; then
+
+        pass "Task 3: Private directory and file permissions configured"
+
+    else
+        fail "Task 3: Private directory permissions are incorrect"
+    fi
+
+    # TASK 4 - Application Files
+    if [ -f "$BASE/application/app.conf" ] &&
+       [ -f "$BASE/application/app.log" ] &&
+       [ -f "$BASE/application/deploy.sh" ] &&
+       [ -f "$BASE/application/README.txt" ] &&
+       [ "$(stat -c %a "$BASE/application/app.conf" 2>/dev/null)" = "644" ] &&
+       [ "$(stat -c %a "$BASE/application/app.log" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/application/deploy.sh" 2>/dev/null)" = "755" ] &&
+       [ "$(stat -c %a "$BASE/application/README.txt" 2>/dev/null)" = "644" ]; then
+
+        pass "Task 4: Application file permissions configured correctly"
+
+    else
+        fail "Task 4: Application file permissions are incorrect"
+    fi
+
+    # TASK 5 - Configuration Files
+    if [ -f "$BASE/configuration/database.conf" ] &&
+       [ -f "$BASE/configuration/network.conf" ] &&
+       [ "$(stat -c %a "$BASE/configuration/database.conf" 2>/dev/null)" = "600" ] &&
+       [ "$(stat -c %a "$BASE/configuration/network.conf" 2>/dev/null)" = "640" ]; then
+
+        pass "Task 5: Configuration file permissions configured correctly"
+
+    else
+        fail "Task 5: Configuration file permissions are incorrect"
+    fi
+
+    # TASK 6 - Log Directory
+    if [ -d "$BASE/logs" ] &&
+       [ -f "$BASE/logs/application.log" ] &&
+       [ -f "$BASE/logs/access.log" ] &&
+       [ "$(stat -c %a "$BASE/logs" 2>/dev/null)" = "750" ] &&
+       [ "$(stat -c %a "$BASE/logs/application.log" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/logs/access.log" 2>/dev/null)" = "644" ]; then
+
+        pass "Task 6: Log directory and file permissions configured"
+
+    else
+        fail "Task 6: Log permissions are incorrect"
+    fi
+
+    # TASK 7 - Recursive Permissions
+    TASK7_OK=1
+    for DIR in \
+        "$BASE/reports" \
+        "$BASE/reports/engineering" \
+        "$BASE/reports/management"
+    do
+        [ -d "$DIR" ] || TASK7_OK=0
+        [ "$(stat -c %a "$DIR" 2>/dev/null)" = "700" ] || TASK7_OK=0
+    done
+
+    for FILE in \
+        "$BASE/reports/engineering/report1.txt" \
+        "$BASE/reports/engineering/report2.txt" \
+        "$BASE/reports/management/bonus.txt" \
+        "$BASE/reports/management/rise.txt"
+    do
+        [ -f "$FILE" ] || TASK7_OK=0
+        [ "$(stat -c %a "$FILE" 2>/dev/null)" = "700" ] || TASK7_OK=0
+    done
+
+    [ -f "$BASE/reports/daily.txt" ] || TASK7_OK=0
+    [ "$(stat -c %a "$BASE/reports/daily.txt" 2>/dev/null)" = "660" ] || TASK7_OK=0
+
+    if [ "$TASK7_OK" -eq 1 ]; then
+        pass "Task 7: Recursive permissions and daily.txt configured correctly"
+    else
+        fail "Task 7: Reports hierarchy permissions are incorrect"
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+# =========================================================
+# RESULT STYLES
+# =========================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+.lab-summary{
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+.lab-summary-title{
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+.lab-summary-info{
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+.lab-summary-row{
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+.lab-summary-label{
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+.result-percentage{
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+.result-success{
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+.result-failed{
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+# =========================================================
+# RESULT SUMMARY
+# =========================================================
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=================================================================================
+

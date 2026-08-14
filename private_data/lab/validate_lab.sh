@@ -47,11 +47,15 @@ echo "Sit tight. Validation of your $LAB_NUMBER is in process. Good luck....."
 case "$LAB_NUMBER" in
 
     lab201)
-        validate_lab201_navigation
+        validate_lab201_commands_sysinfo 
         ;;
 
-    lab2)
-        validate_lab202_fs_mgt
+    lab202)
+        validate_lab202_linuxfs_navigation_fsmgt
+        ;;
+
+    lab203)
+        validate_lab203_command_navigation
         ;;
 
     lab204)
@@ -59,6 +63,9 @@ case "$LAB_NUMBER" in
         ;;
     lab205)
         validate_lab205_file_permissions
+        ;;
+    lab206)
+        validate_lab206_file_permissionsII
         ;;
     *)
 

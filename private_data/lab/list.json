@@ -24,7 +24,12 @@
         "name": "lab 205 - Linux File Permissions",
         "file": "lab205.json"
     },
-
+    {
+        "category": "Linux",
+        "name": "lab 206 - Linux File Permissions II",
+        "file": "lab206.json"
+    },
+   
     {
         "category": "Amazon Web Services",
         "name": "Lab101 - Launch an AWS EC2 Linux Instance (Amazon Linux 2023)",

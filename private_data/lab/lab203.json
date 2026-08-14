@@ -84,7 +84,7 @@
 
       "steps": [
         "Create a directory named Linux.",
-        "Navigate into the Linux directory."
+        "Navigate into the 'Linux' directory."
       ]
     },
 
@@ -93,8 +93,8 @@
       "title": "Verify Linux Directory",
 
       "steps": [
-        "Verify that you are inside the Linux directory.",
-        "Display the present working directory."
+        "While you are inside 'Linux' Directory Verify that you are inside the Linux directory.",
+        "Display the present working directory and redirect the output to '~/server_info'."
       ]
     },
 
