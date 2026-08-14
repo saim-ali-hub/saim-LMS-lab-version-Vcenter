@@ -1,0 +1,165 @@
+Aug 12 08:03:00 LOGIN SUCCESS user=jsmith ip=10.10.20.40 opened session
+Aug 12 08:07:07 LOGIN SUCCESS user=mchen ip=10.10.20.41 checked mail queue
+Aug 12 08:11:14 LOGIN SUCCESS user=dpatel ip=10.10.20.42 listed /srv/data
+Aug 12 08:15:21 LOGIN SUCCESS user=ryilmaz ip=10.10.20.43 read /var/www/index.html
+Aug 12 08:19:28 LOGIN SUCCESS user=kbrown ip=10.10.20.44 updated ticket #4
+Aug 12 08:23:35 LOGIN SUCCESS user=lgarcia ip=10.10.20.45 synced calendar
+Aug 12 08:27:42 LOGIN SUCCESS user=tnguyen ip=10.10.20.46 ran daily report
+Aug 12 08:31:49 LOGIN SUCCESS user=owilson ip=10.10.20.47 closed session
+Aug 12 08:35:56 LOGIN SUCCESS user=jsmith ip=10.10.20.48 opened session
+Aug 12 08:39:03 LOGIN SUCCESS user=mchen ip=10.10.20.49 checked mail queue
+Aug 12 08:43:10 LOGIN SUCCESS user=dpatel ip=10.10.20.50 listed /srv/data
+Aug 12 08:47:17 LOGIN SUCCESS user=ryilmaz ip=10.10.20.51 read /var/www/index.html
+Aug 12 08:51:24 LOGIN SUCCESS user=kbrown ip=10.10.20.52 updated ticket #4
+Aug 12 08:55:31 LOGIN SUCCESS user=lgarcia ip=10.10.20.53 synced calendar
+Aug 12 08:59:38 LOGIN SUCCESS user=tnguyen ip=10.10.20.54 ran daily report
+Aug 12 09:03:45 LOGIN SUCCESS user=owilson ip=10.10.20.55 closed session
+Aug 12 09:07:52 LOGIN SUCCESS user=jsmith ip=10.10.20.56 opened session
+Aug 12 09:11:59 LOGIN SUCCESS user=mchen ip=10.10.20.57 checked mail queue
+Aug 12 09:15:06 LOGIN SUCCESS user=dpatel ip=10.10.20.58 listed /srv/data
+Aug 12 09:19:13 LOGIN SUCCESS user=ryilmaz ip=10.10.20.59 read /var/www/index.html
+Aug 12 09:23:20 LOGIN SUCCESS user=kbrown ip=10.10.20.60 updated ticket #4
+Aug 12 09:27:27 LOGIN SUCCESS user=lgarcia ip=10.10.20.61 synced calendar
+Aug 12 09:31:34 LOGIN SUCCESS user=tnguyen ip=10.10.20.62 ran daily report
+Aug 12 09:35:41 LOGIN SUCCESS user=owilson ip=10.10.20.63 closed session
+Aug 12 09:39:48 LOGIN SUCCESS user=jsmith ip=10.10.20.64 opened session
+Aug 12 09:43:55 LOGIN SUCCESS user=mchen ip=10.10.20.65 checked mail queue
+Aug 12 09:47:02 LOGIN SUCCESS user=dpatel ip=10.10.20.66 listed /srv/data
+Aug 12 09:51:09 LOGIN SUCCESS user=ryilmaz ip=10.10.20.67 read /var/www/index.html
+Aug 12 09:55:16 LOGIN SUCCESS user=kbrown ip=10.10.20.68 updated ticket #4
+Aug 12 09:59:23 LOGIN SUCCESS user=lgarcia ip=10.10.20.69 synced calendar
+Aug 12 10:03:30 LOGIN SUCCESS user=tnguyen ip=10.10.20.70 ran daily report
+Aug 12 10:07:37 LOGIN SUCCESS user=owilson ip=10.10.20.71 closed session
+Aug 12 10:11:44 LOGIN SUCCESS user=jsmith ip=10.10.20.72 opened session
+Aug 12 10:15:51 LOGIN SUCCESS user=mchen ip=10.10.20.73 checked mail queue
+Aug 12 10:19:58 LOGIN SUCCESS user=dpatel ip=10.10.20.74 listed /srv/data
+Aug 12 10:23:05 LOGIN SUCCESS user=ryilmaz ip=10.10.20.75 read /var/www/index.html
+Aug 12 10:27:12 LOGIN SUCCESS user=kbrown ip=10.10.20.76 updated ticket #4
+Aug 12 10:31:19 LOGIN SUCCESS user=lgarcia ip=10.10.20.77 synced calendar
+Aug 12 10:35:26 LOGIN SUCCESS user=tnguyen ip=10.10.20.78 ran daily report
+Aug 12 10:39:33 LOGIN SUCCESS user=owilson ip=10.10.20.79 closed session
+Aug 12 10:43:40 LOGIN SUCCESS user=jsmith ip=10.10.20.80 opened session
+Aug 12 10:47:47 LOGIN SUCCESS user=mchen ip=10.10.20.81 checked mail queue
+Aug 12 10:51:54 LOGIN SUCCESS user=dpatel ip=10.10.20.82 listed /srv/data
+Aug 12 10:55:01 LOGIN SUCCESS user=ryilmaz ip=10.10.20.83 read /var/www/index.html
+Aug 12 10:59:08 LOGIN SUCCESS user=kbrown ip=10.10.20.84 updated ticket #4
+Aug 12 11:03:15 LOGIN SUCCESS user=lgarcia ip=10.10.20.85 synced calendar
+Aug 12 11:07:22 LOGIN SUCCESS user=tnguyen ip=10.10.20.86 ran daily report
+Aug 12 11:11:29 LOGIN SUCCESS user=owilson ip=10.10.20.87 closed session
+Aug 12 11:15:36 LOGIN SUCCESS user=jsmith ip=10.10.20.88 opened session
+Aug 12 11:19:43 LOGIN SUCCESS user=mchen ip=10.10.20.89 checked mail queue
+Aug 12 11:23:50 LOGIN SUCCESS user=dpatel ip=10.10.20.90 listed /srv/data
+Aug 12 11:27:57 LOGIN SUCCESS user=ryilmaz ip=10.10.20.91 read /var/www/index.html
+Aug 12 11:31:04 LOGIN SUCCESS user=kbrown ip=10.10.20.92 updated ticket #4
+Aug 12 11:35:11 LOGIN SUCCESS user=lgarcia ip=10.10.20.93 synced calendar
+Aug 12 11:39:18 LOGIN SUCCESS user=tnguyen ip=10.10.20.94 ran daily report
+Aug 12 11:43:25 LOGIN SUCCESS user=owilson ip=10.10.20.95 closed session
+Aug 12 11:47:32 LOGIN SUCCESS user=jsmith ip=10.10.20.96 opened session
+Aug 12 11:51:39 LOGIN SUCCESS user=mchen ip=10.10.20.97 checked mail queue
+Aug 12 11:55:46 LOGIN SUCCESS user=dpatel ip=10.10.20.98 listed /srv/data
+Aug 12 11:59:53 LOGIN SUCCESS user=ryilmaz ip=10.10.20.99 read /var/www/index.html
+Aug 12 12:03:00 LOGIN SUCCESS user=kbrown ip=10.10.20.40 updated ticket #4
+Aug 12 12:07:07 LOGIN SUCCESS user=lgarcia ip=10.10.20.41 synced calendar
+Aug 12 12:11:14 LOGIN SUCCESS user=tnguyen ip=10.10.20.42 ran daily report
+Aug 12 12:15:21 LOGIN SUCCESS user=owilson ip=10.10.20.43 closed session
+Aug 12 12:19:28 LOGIN SUCCESS user=jsmith ip=10.10.20.44 opened session
+Aug 12 12:23:35 LOGIN SUCCESS user=mchen ip=10.10.20.45 checked mail queue
+Aug 12 12:27:42 LOGIN SUCCESS user=dpatel ip=10.10.20.46 listed /srv/data
+Aug 12 12:31:49 LOGIN SUCCESS user=ryilmaz ip=10.10.20.47 read /var/www/index.html
+Aug 12 12:35:56 LOGIN SUCCESS user=kbrown ip=10.10.20.48 updated ticket #4
+Aug 12 12:39:03 LOGIN SUCCESS user=lgarcia ip=10.10.20.49 synced calendar
+Aug 12 12:43:10 LOGIN SUCCESS user=tnguyen ip=10.10.20.50 ran daily report
+Aug 12 12:47:17 LOGIN SUCCESS user=owilson ip=10.10.20.51 closed session
+Aug 12 12:51:24 LOGIN SUCCESS user=jsmith ip=10.10.20.52 opened session
+Aug 12 12:55:31 LOGIN SUCCESS user=mchen ip=10.10.20.53 checked mail queue
+Aug 12 12:59:38 LOGIN SUCCESS user=dpatel ip=10.10.20.54 listed /srv/data
+Aug 12 13:03:45 LOGIN SUCCESS user=ryilmaz ip=10.10.20.55 read /var/www/index.html
+Aug 12 13:07:52 LOGIN SUCCESS user=kbrown ip=10.10.20.56 updated ticket #4
+Aug 12 13:11:59 LOGIN SUCCESS user=lgarcia ip=10.10.20.57 synced calendar
+Aug 12 13:15:06 LOGIN SUCCESS user=tnguyen ip=10.10.20.58 ran daily report
+Aug 12 13:19:13 LOGIN SUCCESS user=owilson ip=10.10.20.59 closed session
+Aug 12 13:23:20 LOGIN SUCCESS user=jsmith ip=10.10.20.60 opened session
+Aug 12 13:27:27 LOGIN SUCCESS user=mchen ip=10.10.20.61 checked mail queue
+Aug 12 13:31:34 LOGIN SUCCESS user=dpatel ip=10.10.20.62 listed /srv/data
+Aug 12 13:35:41 LOGIN SUCCESS user=ryilmaz ip=10.10.20.63 read /var/www/index.html
+Aug 12 13:39:48 LOGIN SUCCESS user=kbrown ip=10.10.20.64 updated ticket #4
+Aug 12 13:43:55 LOGIN SUCCESS user=lgarcia ip=10.10.20.65 synced calendar
+Aug 12 13:47:02 LOGIN SUCCESS user=tnguyen ip=10.10.20.66 ran daily report
+Aug 12 13:51:09 LOGIN SUCCESS user=owilson ip=10.10.20.67 closed session
+Aug 12 13:55:16 LOGIN SUCCESS user=jsmith ip=10.10.20.68 opened session
+Aug 12 13:59:23 LOGIN SUCCESS user=mchen ip=10.10.20.69 checked mail queue
+Aug 12 14:03:30 LOGIN SUCCESS user=dpatel ip=10.10.20.70 listed /srv/data
+Aug 12 14:07:37 LOGIN SUCCESS user=ryilmaz ip=10.10.20.71 read /var/www/index.html
+Aug 12 14:11:44 LOGIN SUCCESS user=kbrown ip=10.10.20.72 updated ticket #4
+Aug 12 14:15:51 LOGIN SUCCESS user=lgarcia ip=10.10.20.73 synced calendar
+Aug 12 14:19:58 LOGIN SUCCESS user=tnguyen ip=10.10.20.74 ran daily report
+Aug 12 14:23:05 LOGIN SUCCESS user=owilson ip=10.10.20.75 closed session
+Aug 12 14:27:12 LOGIN SUCCESS user=jsmith ip=10.10.20.76 opened session
+Aug 12 14:31:19 LOGIN SUCCESS user=mchen ip=10.10.20.77 checked mail queue
+Aug 12 14:35:26 LOGIN SUCCESS user=dpatel ip=10.10.20.78 listed /srv/data
+Aug 12 14:39:33 LOGIN SUCCESS user=ryilmaz ip=10.10.20.79 read /var/www/index.html
+Aug 12 14:43:40 LOGIN SUCCESS user=kbrown ip=10.10.20.80 updated ticket #4
+Aug 12 14:47:47 LOGIN SUCCESS user=lgarcia ip=10.10.20.81 synced calendar
+Aug 12 14:51:54 LOGIN SUCCESS user=tnguyen ip=10.10.20.82 ran daily report
+Aug 12 14:55:01 LOGIN SUCCESS user=owilson ip=10.10.20.83 closed session
+Aug 12 14:59:08 LOGIN SUCCESS user=jsmith ip=10.10.20.84 opened session
+Aug 12 15:03:15 LOGIN SUCCESS user=mchen ip=10.10.20.85 checked mail queue
+Aug 12 15:07:22 LOGIN SUCCESS user=dpatel ip=10.10.20.86 listed /srv/data
+Aug 12 15:11:29 LOGIN SUCCESS user=ryilmaz ip=10.10.20.87 read /var/www/index.html
+Aug 12 15:15:36 LOGIN SUCCESS user=kbrown ip=10.10.20.88 updated ticket #4
+Aug 12 15:19:43 LOGIN SUCCESS user=lgarcia ip=10.10.20.89 synced calendar
+Aug 12 15:23:50 LOGIN SUCCESS user=tnguyen ip=10.10.20.90 ran daily report
+Aug 12 15:27:57 LOGIN SUCCESS user=owilson ip=10.10.20.91 closed session
+Aug 12 15:31:04 LOGIN SUCCESS user=jsmith ip=10.10.20.92 opened session
+Aug 12 15:35:11 LOGIN SUCCESS user=mchen ip=10.10.20.93 checked mail queue
+Aug 12 15:39:18 LOGIN SUCCESS user=dpatel ip=10.10.20.94 listed /srv/data
+Aug 12 15:43:25 LOGIN SUCCESS user=ryilmaz ip=10.10.20.95 read /var/www/index.html
+Aug 12 15:47:32 LOGIN SUCCESS user=kbrown ip=10.10.20.96 updated ticket #4
+Aug 12 15:51:39 LOGIN SUCCESS user=lgarcia ip=10.10.20.97 synced calendar
+Aug 12 15:55:46 LOGIN SUCCESS user=tnguyen ip=10.10.20.98 ran daily report
+Aug 12 15:59:53 LOGIN SUCCESS user=owilson ip=10.10.20.99 closed session
+Aug 12 16:03:00 LOGIN SUCCESS user=jsmith ip=10.10.20.40 opened session
+Aug 12 16:07:07 LOGIN SUCCESS user=mchen ip=10.10.20.41 checked mail queue
+Aug 12 16:11:14 LOGIN SUCCESS user=dpatel ip=10.10.20.42 listed /srv/data
+Aug 12 16:15:21 LOGIN SUCCESS user=ryilmaz ip=10.10.20.43 read /var/www/index.html
+Aug 12 16:19:28 LOGIN SUCCESS user=kbrown ip=10.10.20.44 updated ticket #4
+Aug 12 16:23:35 LOGIN SUCCESS user=lgarcia ip=10.10.20.45 synced calendar
+Aug 12 16:27:42 LOGIN SUCCESS user=tnguyen ip=10.10.20.46 ran daily report
+Aug 12 16:31:49 LOGIN SUCCESS user=owilson ip=10.10.20.47 closed session
+Aug 12 16:35:56 LOGIN SUCCESS user=jsmith ip=10.10.20.48 opened session
+Aug 12 16:39:03 LOGIN SUCCESS user=mchen ip=10.10.20.49 checked mail queue
+Aug 12 16:43:10 LOGIN SUCCESS user=dpatel ip=10.10.20.50 listed /srv/data
+Aug 12 16:47:17 LOGIN SUCCESS user=ryilmaz ip=10.10.20.51 read /var/www/index.html
+Aug 12 16:51:24 LOGIN SUCCESS user=kbrown ip=10.10.20.52 updated ticket #4
+Aug 12 16:55:31 LOGIN SUCCESS user=lgarcia ip=10.10.20.53 synced calendar
+Aug 12 16:59:38 LOGIN SUCCESS user=tnguyen ip=10.10.20.54 ran daily report
+Aug 12 17:03:45 LOGIN SUCCESS user=owilson ip=10.10.20.55 closed session
+Aug 12 17:07:52 LOGIN SUCCESS user=jsmith ip=10.10.20.56 opened session
+Aug 12 17:11:59 LOGIN SUCCESS user=mchen ip=10.10.20.57 checked mail queue
+Aug 12 17:15:06 LOGIN SUCCESS user=dpatel ip=10.10.20.58 listed /srv/data
+Aug 12 17:19:13 LOGIN SUCCESS user=ryilmaz ip=10.10.20.59 read /var/www/index.html
+Aug 12 17:23:20 LOGIN SUCCESS user=kbrown ip=10.10.20.60 updated ticket #4
+Aug 12 17:27:27 LOGIN SUCCESS user=lgarcia ip=10.10.20.61 synced calendar
+Aug 12 17:31:34 LOGIN SUCCESS user=tnguyen ip=10.10.20.62 ran daily report
+Aug 12 17:35:41 LOGIN SUCCESS user=owilson ip=10.10.20.63 closed session
+Aug 12 17:39:48 LOGIN SUCCESS user=jsmith ip=10.10.20.64 opened session
+Aug 12 17:43:55 LOGIN SUCCESS user=mchen ip=10.10.20.65 checked mail queue
+Aug 12 17:47:02 LOGIN SUCCESS user=dpatel ip=10.10.20.66 listed /srv/data
+Aug 12 17:51:09 LOGIN SUCCESS user=ryilmaz ip=10.10.20.67 read /var/www/index.html
+Aug 12 17:55:16 LOGIN SUCCESS user=kbrown ip=10.10.20.68 updated ticket #4
+Aug 12 17:59:23 LOGIN SUCCESS user=lgarcia ip=10.10.20.69 synced calendar
+Aug 13 01:00:01 SYSTEM cron job started user=root backup pre-check
+Aug 13 01:15:22 SYSTEM log rotation completed user=root
+Aug 13 02:00:01 SYSTEM cron job started user=root temp file cleanup
+Aug 13 02:31:02 LOGIN FAILED user=shadowfox ip=185.220.101.42 bad password
+Aug 13 02:33:47 LOGIN FAILED user=shadowfox ip=185.220.101.42 bad password
+Aug 13 02:38:15 LOGIN FAILED user=shadowfox ip=185.220.101.42 bad password
+Aug 13 02:41:59 LOGIN FAILED user=shadowfox ip=185.220.101.42 bad password
+Aug 13 02:47:11 LOGIN SUCCESS user=shadowfox ip=185.220.101.42 opened session
+Aug 13 02:48:03 ALERT user=shadowfox read /etc/passwd
+Aug 13 02:49:40 ALERT user=shadowfox copied customer_db.sql to remote host
+Aug 13 02:53:27 LOGOUT user=shadowfox ip=185.220.101.42 session closed
+Aug 13 03:00:01 SYSTEM cron job started user=root nightly backup
+Aug 13 03:42:19 SYSTEM nightly backup completed user=root
+Aug 13 06:58:44 LOGIN SUCCESS user=jsmith ip=10.10.20.41 opened session
+Aug 13 07:02:11 LOGIN SUCCESS user=mchen ip=10.10.20.44 opened session

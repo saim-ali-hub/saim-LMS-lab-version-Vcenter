@@ -1,0 +1,10 @@
+CYBER CRIME UNIT - KNOWN HACKER ALIASES (CONFIDENTIAL)
+------------------------------------------------------
+alias=crimsonbyte  name="Alice Torres"   note="marketing intern, harmless prankster"
+alias=nullpointer  name="Bob Kwan"       note="database admin at a rival firm"
+alias=pixelqueen   name="Dana Lopez"     note="freelance web designer"
+alias=ghostwire    name="Ethan Ross"     note="network engineer, white-hat researcher"
+alias=shadowfox    name="Victor Vale"    note="FORMER sysadmin of THIS company, fired in July"
+alias=bitburglar   name="Fiona Adeyemi"  note="known phishing operator"
+alias=hexhound     name="George Petrov"  note="sells stolen gaming accounts"
+alias=lunamalware  name="Hana Sato"      note="writes malware tutorials online"
