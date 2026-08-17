@@ -64,6 +64,18 @@ case "$LAB_NUMBER" in
     lab205)
         validate_lab205_file_permissions
         ;;
+    lab206)
+        validate_lab206_file_permissionsII
+        ;;
+    lab207)
+        validate_lab207_ownership_group_management
+        ;;
+    lab208)
+        validate_lab208_linux_file_links
+        ;;
+    lab209)
+        validate_lab209_linux_admin_onboarding
+        ;;
     *)
 
         echo "Invalid lab: $LAB_NUMBER"

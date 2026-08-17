@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# ============================================================
+# LINOOP Restricted chgrp wrapper
+#
+# Allowed:
+#
+#   sudo chgrp GROUP FILE
+#   sudo chgrp -R GROUP DIRECTORY
+#
+# Target must be inside the calling user's home directory.
+# ============================================================
+
+REAL_CHGRP="/bin/chgrp"
+
+# ------------------------------------------------------------
+# Identify original sudo user
+# ------------------------------------------------------------
+
+CALLING_USER="${SUDO_USER:-}"
+
+if [ -z "$CALLING_USER" ] || [ "$CALLING_USER" = "root" ]; then
+    echo "ERROR: Invalid calling user."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Find user's home directory
+# ------------------------------------------------------------
+
+USER_HOME=$(getent passwd "$CALLING_USER" | cut -d: -f6)
+
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+    echo "ERROR: Cannot determine home directory for $CALLING_USER."
+    exit 1
+fi
+
+REAL_HOME=$(realpath -e "$USER_HOME") || {
+    echo "ERROR: Cannot resolve home directory."
+    exit 1
+}
+
+# ------------------------------------------------------------
+# Parse options
+#
+# Allowed:
+#   -R
+#   --recursive
+# ------------------------------------------------------------
+
+RECURSIVE=0
+
+while [ "$#" -gt 0 ]; do
+
+    case "$1" in
+
+        -R|--recursive)
+            RECURSIVE=1
+            shift
+            ;;
+
+        --)
+            shift
+            break
+            ;;
+
+        -*)
+            echo "ERROR: Option '$1' is not allowed."
+            exit 1
+            ;;
+
+        *)
+            break
+            ;;
+
+    esac
+
+done
+
+# ------------------------------------------------------------
+# Require GROUP and TARGET
+# ------------------------------------------------------------
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage:"
+    echo "  sudo chgrp [ -R ] GROUP FILE..."
+    exit 1
+fi
+
+GROUP="$1"
+shift
+
+# ------------------------------------------------------------
+# Validate group
+# ------------------------------------------------------------
+
+if ! getent group "$GROUP" >/dev/null 2>&1; then
+    echo "ERROR: Group '$GROUP' does not exist."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Build arguments
+# ------------------------------------------------------------
+
+CHGRP_ARGS=()
+
+if [ "$RECURSIVE" -eq 1 ]; then
+    CHGRP_ARGS+=("-R")
+fi
+
+CHGRP_ARGS+=("$GROUP")
+
+# ------------------------------------------------------------
+# Validate every target
+# ------------------------------------------------------------
+
+for TARGET in "$@"; do
+
+    if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+        echo "ERROR: Target does not exist:"
+        echo "  $TARGET"
+        exit 1
+    fi
+
+    REAL_TARGET=$(realpath -e "$TARGET" 2>/dev/null) || {
+        echo "ERROR: Cannot resolve target:"
+        echo "  $TARGET"
+        exit 1
+    }
+
+    # --------------------------------------------------------
+    # Target must be inside the calling user's home directory
+    # --------------------------------------------------------
+
+    case "$REAL_TARGET" in
+
+        "$REAL_HOME")
+            ;;
+
+        "$REAL_HOME"/*)
+            ;;
+
+        *)
+            echo "ERROR: Access denied."
+            echo
+            echo "Your allowed directory:"
+            echo "  $REAL_HOME"
+            echo
+            echo "Requested target:"
+            echo "  $TARGET"
+            exit 1
+            ;;
+
+    esac
+
+done
+
+# ------------------------------------------------------------
+# Execute real chgrp
+# ------------------------------------------------------------
+
+exec "$REAL_CHGRP" "${CHGRP_ARGS[@]}" "$@"
+

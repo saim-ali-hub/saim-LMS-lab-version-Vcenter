@@ -1,0 +1,259 @@
+#!/bin/bash
+
+# ============================================================
+# LINOOP Restricted chown wrapper
+#
+# Allowed:
+#
+#   sudo chown USER FILE
+#   sudo chown USER:GROUP FILE
+#   sudo chown :GROUP FILE
+#
+# Recursive:
+#
+#   sudo chown -R USER DIRECTORY
+#   sudo chown -R USER:GROUP DIRECTORY
+#   sudo chown -R :GROUP DIRECTORY
+#
+# Target must be inside the calling user's home directory.
+# ============================================================
+
+REAL_CHOWN="/bin/chown"
+
+# ------------------------------------------------------------
+# Identify the original sudo user
+# ------------------------------------------------------------
+
+CALLING_USER="${SUDO_USER:-}"
+
+if [ -z "$CALLING_USER" ] || [ "$CALLING_USER" = "root" ]; then
+    echo "ERROR: Invalid calling user."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Find the user's home directory using NSS/SSSD
+# ------------------------------------------------------------
+
+USER_HOME=$(getent passwd "$CALLING_USER" | cut -d: -f6)
+
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+    echo "ERROR: Cannot determine home directory for $CALLING_USER."
+    exit 1
+fi
+
+REAL_HOME=$(realpath -e "$USER_HOME") || {
+    echo "ERROR: Cannot resolve home directory."
+    exit 1
+}
+
+# ------------------------------------------------------------
+# Parse options
+#
+# Allowed:
+#   -R
+#   --recursive
+# ------------------------------------------------------------
+
+RECURSIVE=0
+
+while [ "$#" -gt 0 ]; do
+
+    case "$1" in
+
+        -R|--recursive)
+            RECURSIVE=1
+            shift
+            ;;
+
+        --)
+            shift
+            break
+            ;;
+
+        -*)
+            echo "ERROR: Option '$1' is not allowed."
+            exit 1
+            ;;
+
+        *)
+            break
+            ;;
+
+    esac
+
+done
+
+# ------------------------------------------------------------
+# Require OWNER[:GROUP] and at least one target
+# ------------------------------------------------------------
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage:"
+    echo "  sudo chown [ -R ] USER FILE..."
+    echo "  sudo chown [ -R ] USER:GROUP FILE..."
+    echo "  sudo chown [ -R ] :GROUP FILE..."
+    exit 1
+fi
+
+OWNER_SPEC="$1"
+shift
+
+# ------------------------------------------------------------
+# Separate owner and group
+#
+# Supported:
+#
+#   USER
+#   USER:GROUP
+#   :GROUP
+# ------------------------------------------------------------
+
+if [[ "$OWNER_SPEC" == :* ]]; then
+
+    # --------------------------------------------------------
+    # GROUP ONLY
+    # Example:
+    #   :developers
+    # --------------------------------------------------------
+
+    OWNER=""
+    GROUP="${OWNER_SPEC#:}"
+
+elif [[ "$OWNER_SPEC" == *:* ]]; then
+
+    # --------------------------------------------------------
+    # OWNER + GROUP
+    # Example:
+    #   saim:developers
+    # --------------------------------------------------------
+
+    OWNER="${OWNER_SPEC%%:*}"
+    GROUP="${OWNER_SPEC#*:}"
+
+else
+
+    # --------------------------------------------------------
+    # OWNER ONLY
+    # Example:
+    #   saim
+    # --------------------------------------------------------
+
+    OWNER="$OWNER_SPEC"
+    GROUP=""
+
+fi
+
+# ------------------------------------------------------------
+# Validate ownership specification
+# ------------------------------------------------------------
+
+if [ -z "$OWNER" ] && [ -z "$GROUP" ]; then
+    echo "ERROR: Invalid ownership specification."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# root cannot be assigned as owner
+# ------------------------------------------------------------
+
+if [ "$OWNER" = "root" ]; then
+    echo "ERROR: Assigning root as the file owner is not permitted."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Validate owner if supplied
+#
+# Works with local users and AD/SSSD users.
+# ------------------------------------------------------------
+
+if [ -n "$OWNER" ]; then
+
+    if ! getent passwd "$OWNER" >/dev/null 2>&1; then
+        echo "ERROR: User '$OWNER' does not exist."
+        exit 1
+    fi
+
+fi
+
+# ------------------------------------------------------------
+# Validate group if supplied
+#
+# Works with local groups and AD/SSSD groups.
+# ------------------------------------------------------------
+
+if [ -n "$GROUP" ]; then
+
+    if ! getent group "$GROUP" >/dev/null 2>&1; then
+        echo "ERROR: Group '$GROUP' does not exist."
+        exit 1
+    fi
+
+fi
+
+# ------------------------------------------------------------
+# Build chown arguments
+# ------------------------------------------------------------
+
+CHOWN_ARGS=()
+
+if [ "$RECURSIVE" -eq 1 ]; then
+    CHOWN_ARGS+=("-R")
+fi
+
+CHOWN_ARGS+=("$OWNER_SPEC")
+
+# ------------------------------------------------------------
+# Validate every target
+# ------------------------------------------------------------
+
+for TARGET in "$@"; do
+
+    # Target must exist
+    if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+        echo "ERROR: Target does not exist:"
+        echo "  $TARGET"
+        exit 1
+    fi
+
+    # Resolve actual path
+    REAL_TARGET=$(realpath -e "$TARGET" 2>/dev/null) || {
+        echo "ERROR: Cannot resolve target:"
+        echo "  $TARGET"
+        exit 1
+    }
+
+    # --------------------------------------------------------
+    # Target must be inside the calling user's home directory
+    # --------------------------------------------------------
+
+    case "$REAL_TARGET" in
+
+        "$REAL_HOME")
+            ;;
+
+        "$REAL_HOME"/*)
+            ;;
+
+        *)
+            echo "ERROR: Access denied."
+            echo
+            echo "Your allowed directory:"
+            echo "  $REAL_HOME"
+            echo
+            echo "Requested target:"
+            echo "  $TARGET"
+            exit 1
+            ;;
+
+    esac
+
+done
+
+# ------------------------------------------------------------
+# Execute real chown
+# ------------------------------------------------------------
+
+exec "$REAL_CHOWN" "${CHOWN_ARGS[@]}" "$@"
+

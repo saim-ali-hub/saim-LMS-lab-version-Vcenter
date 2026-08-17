@@ -1,0 +1,23 @@
+# ============================================================
+# LINOOP restricted ownership management
+#
+# AD/SSSD group:
+#   domain users
+#
+# Students can use:
+#
+#   sudo chown USER /home/USER/file
+#   sudo chown USER:GROUP /home/USER/file
+#   sudo chown :GROUP /home/USER/file
+#   sudo chgrp GROUP /home/USER/file
+#
+# Recursive operations are supported with -R.
+#
+# sudo secure_path causes "sudo chown" and "sudo chgrp"
+# to resolve to the controlled wrappers below.
+# ============================================================
+
+Defaults:%domain\ users secure_path="/usr/local/libexec/linoop:/sbin:/bin:/usr/sbin:/usr/bin"
+
+%domain\ users ALL=(root) NOPASSWD: /usr/local/libexec/linoop/chown *
+%domain\ users ALL=(root) NOPASSWD: /usr/local/libexec/linoop/chgrp *

@@ -1934,3 +1934,1893 @@ cat <<HTML
 HTML
 }
 #=================================================================
+
+validate_lab206_file_permissionsII() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 206 - Linux File Permissions II..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/permissions_lab"
+
+    TOTAL_TASKS=7
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux File Permissions"
+    DATE=$(date "+%F %T")
+
+    # HELPERS
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - Directory Structure
+    if [ -d "$BASE" ] &&
+       [ -d "$BASE/application" ] &&
+       [ -d "$BASE/configuration" ] &&
+       [ -d "$BASE/logs" ] &&
+       [ -d "$BASE/scripts" ] &&
+       [ -d "$BASE/reports" ] &&
+       [ -d "$BASE/private" ]; then
+
+        pass "Task 1: permissions_lab directory structure created"
+
+    else
+        fail "Task 1: Required directories are missing"
+    fi
+
+    # TASK 2 - Symbolic Permissions
+    if [ -f "$BASE/scripts/backup.sh" ] &&
+       [ -f "$BASE/scripts/monitor.sh" ] &&
+       [ -f "$BASE/scripts/cleanup.sh" ] &&
+       [ "$(stat -c %a "$BASE/scripts/backup.sh" 2>/dev/null)" = "700" ] &&
+       [ "$(stat -c %a "$BASE/scripts/monitor.sh" 2>/dev/null)" = "755" ] &&
+       [ "$(stat -c %a "$BASE/scripts/cleanup.sh" 2>/dev/null)" = "750" ]; then
+
+        pass "Task 2: Symbolic permissions configured correctly"
+
+    else
+        fail "Task 2: Script permissions are incorrect"
+    fi
+
+    # TASK 3 - Private Directory
+    if [ -d "$BASE/private" ] &&
+       [ -f "$BASE/private/credentials.txt" ] &&
+       [ -f "$BASE/private/keys.txt" ] &&
+       [ "$(stat -c %a "$BASE/private" 2>/dev/null)" = "700" ] &&
+       [ "$(stat -c %a "$BASE/private/credentials.txt" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/private/keys.txt" 2>/dev/null)" = "600" ]; then
+
+        pass "Task 3: Private directory and file permissions configured"
+
+    else
+        fail "Task 3: Private directory permissions are incorrect"
+    fi
+
+    # TASK 4 - Application Files
+    if [ -f "$BASE/application/app.conf" ] &&
+       [ -f "$BASE/application/app.log" ] &&
+       [ -f "$BASE/application/deploy.sh" ] &&
+       [ -f "$BASE/application/README.txt" ] &&
+       [ "$(stat -c %a "$BASE/application/app.conf" 2>/dev/null)" = "644" ] &&
+       [ "$(stat -c %a "$BASE/application/app.log" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/application/deploy.sh" 2>/dev/null)" = "755" ] &&
+       [ "$(stat -c %a "$BASE/application/README.txt" 2>/dev/null)" = "644" ]; then
+
+        pass "Task 4: Application file permissions configured correctly"
+
+    else
+        fail "Task 4: Application file permissions are incorrect"
+    fi
+
+    # TASK 5 - Configuration Files
+    if [ -f "$BASE/configuration/database.conf" ] &&
+       [ -f "$BASE/configuration/network.conf" ] &&
+       [ "$(stat -c %a "$BASE/configuration/database.conf" 2>/dev/null)" = "600" ] &&
+       [ "$(stat -c %a "$BASE/configuration/network.conf" 2>/dev/null)" = "640" ]; then
+
+        pass "Task 5: Configuration file permissions configured correctly"
+
+    else
+        fail "Task 5: Configuration file permissions are incorrect"
+    fi
+
+    # TASK 6 - Log Directory
+    if [ -d "$BASE/logs" ] &&
+       [ -f "$BASE/logs/application.log" ] &&
+       [ -f "$BASE/logs/access.log" ] &&
+       [ "$(stat -c %a "$BASE/logs" 2>/dev/null)" = "750" ] &&
+       [ "$(stat -c %a "$BASE/logs/application.log" 2>/dev/null)" = "640" ] &&
+       [ "$(stat -c %a "$BASE/logs/access.log" 2>/dev/null)" = "644" ]; then
+
+        pass "Task 6: Log directory and file permissions configured"
+
+    else
+        fail "Task 6: Log permissions are incorrect"
+    fi
+
+    # TASK 7 - Recursive Permissions
+    TASK7_OK=1
+    for DIR in \
+        "$BASE/reports" \
+        "$BASE/reports/engineering" \
+        "$BASE/reports/management"
+    do
+        [ -d "$DIR" ] || TASK7_OK=0
+        [ "$(stat -c %a "$DIR" 2>/dev/null)" = "700" ] || TASK7_OK=0
+    done
+
+    for FILE in \
+        "$BASE/reports/engineering/report1.txt" \
+        "$BASE/reports/engineering/report2.txt" \
+        "$BASE/reports/management/bonus.txt" \
+        "$BASE/reports/management/rise.txt"
+    do
+        [ -f "$FILE" ] || TASK7_OK=0
+        [ "$(stat -c %a "$FILE" 2>/dev/null)" = "700" ] || TASK7_OK=0
+    done
+
+    [ -f "$BASE/reports/daily.txt" ] || TASK7_OK=0
+    [ "$(stat -c %a "$BASE/reports/daily.txt" 2>/dev/null)" = "660" ] || TASK7_OK=0
+
+    if [ "$TASK7_OK" -eq 1 ]; then
+        pass "Task 7: Recursive permissions and daily.txt configured correctly"
+    else
+        fail "Task 7: Reports hierarchy permissions are incorrect"
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+# =========================================================
+# RESULT STYLES
+# =========================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+.lab-summary{
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+.lab-summary-title{
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+.lab-summary-info{
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+.lab-summary-row{
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+.lab-summary-label{
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+.result-percentage{
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+.result-success{
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+.result-failed{
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+# =========================================================
+# RESULT SUMMARY
+# =========================================================
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=================================================================================
+
+validate_lab207_ownership_group_management() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 207 - Ownership and Group Management..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/ownership_lab"
+
+    TOTAL_TASKS=10
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Ownership and Group Management"
+    DATE=$(date "+%F %T")
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - DIRECTORY STRUCTURE
+    TASK1_OK=1
+
+    [ -d "$BASE" ] || TASK1_OK=0
+
+    for DIR in \
+        "$BASE/application" \
+        "$BASE/database" \
+        "$BASE/project1" \
+        "$BASE/project2" \
+        "$BASE/backup"
+    do
+        [ -d "$DIR" ] || TASK1_OK=0
+    done
+
+    for FILE in \
+        "$BASE/file1.txt" \
+        "$BASE/file2.txt" \
+        "$BASE/file3.txt" \
+        "$BASE/file4.txt" \
+        "$BASE/backup/backup1.txt" \
+        "$BASE/backup/backup2.txt"
+    do
+        [ -f "$FILE" ] || TASK1_OK=0
+    done
+
+    if [ "$TASK1_OK" -eq 1 ]; then
+        pass "Task 1: ownership_lab directory structure created"
+    else
+        fail "Task 1: Required files or directories are missing"
+    fi
+
+    # TASK 2 - CHANGE ONLY OWNER OF file1.txt
+    FILE1="$BASE/file1.txt"
+
+    FILE1_OWNER=$(stat -c %U "$FILE1" 2>/dev/null)
+    FILE1_GROUP=$(stat -c %G "$FILE1" 2>/dev/null)
+
+    EXPECTED_ORIGINAL_GROUP="domain users"
+
+    if [ -f "$FILE1" ] &&
+       [ "$FILE1_OWNER" = "john" ] &&
+       [ "$FILE1_GROUP" = "$EXPECTED_ORIGINAL_GROUP" ]; then
+
+        pass "Task 2: file1.txt owner changed to john"
+    else
+        fail "Task 2: file1.txt owner or group is incorrect"
+    fi
+
+    # TASK 3 - CHANGE ONLY GROUP USING CHOWN
+    FILE2="$BASE/file2.txt"
+
+    FILE2_OWNER=$(stat -c %U "$FILE2" 2>/dev/null)
+    FILE2_GROUP=$(stat -c %G "$FILE2" 2>/dev/null)
+
+    if [ -f "$FILE2" ] &&
+       [ "$FILE2_OWNER" = "$STUDENT_NAME" ] &&
+       [ "$FILE2_GROUP" = "developers" ]; then
+
+        pass "Task 3: file2.txt group changed to developers using chown"
+    else
+        fail "Task 3: file2.txt owner or group is incorrect"
+    fi
+
+    # TASK 4 - CHANGE ONLY GROUP USING CHGRP
+    FILE3="$BASE/file3.txt"
+
+    FILE3_OWNER=$(stat -c %U "$FILE3" 2>/dev/null)
+    FILE3_GROUP=$(stat -c %G "$FILE3" 2>/dev/null)
+
+    if [ -f "$FILE3" ] &&
+       [ "$FILE3_OWNER" = "$STUDENT_NAME" ] &&
+       [ "$FILE3_GROUP" = "developers" ]; then
+
+        pass "Task 4: file3.txt group changed to developers using chgrp"
+    else
+        fail "Task 4: file3.txt owner or group is incorrect"
+    fi
+
+    # TASK 5 - CHANGE BOTH OWNER AND GROUP
+    FILE4="$BASE/file4.txt"
+
+    FILE4_OWNER=$(stat -c %U "$FILE4" 2>/dev/null)
+    FILE4_GROUP=$(stat -c %G "$FILE4" 2>/dev/null)
+
+    if [ -f "$FILE4" ] &&
+       [ "$FILE4_OWNER" = "john" ] &&
+       [ "$FILE4_GROUP" = "developers" ]; then
+
+        pass "Task 5: file4.txt owner and group changed correctly"
+    else
+        fail "Task 5: file4.txt owner or group is incorrect"
+    fi
+
+    # TASK 6 - CHANGE ONLY OWNER OF APPLICATION DIRECTORY
+    APPLICATION="$BASE/application"
+
+    APPLICATION_OWNER=$(stat -c %U "$APPLICATION" 2>/dev/null)
+    APPLICATION_GROUP=$(stat -c %G "$APPLICATION" 2>/dev/null)
+
+    if [ -d "$APPLICATION" ] &&
+       [ "$APPLICATION_OWNER" = "smith" ] &&
+       [ "$APPLICATION_GROUP" = "$EXPECTED_ORIGINAL_GROUP" ]; then
+
+        pass "Task 6: application directory owner changed to smith"
+    else
+        fail "Task 6: application directory owner or group is incorrect"
+    fi
+
+    # TASK 7 - CHANGE ONLY GROUP OF DATABASE DIRECTORY USING CHOWN
+    DATABASE="$BASE/database"
+
+    DATABASE_OWNER=$(stat -c %U "$DATABASE" 2>/dev/null)
+    DATABASE_GROUP=$(stat -c %G "$DATABASE" 2>/dev/null)
+
+    if [ -d "$DATABASE" ] &&
+       [ "$DATABASE_OWNER" = "$STUDENT_NAME" ] &&
+       [ "$DATABASE_GROUP" = "admins" ]; then
+
+        pass "Task 7: database directory group changed to admins using chown"
+    else
+        fail "Task 7: database directory owner or group is incorrect"
+    fi
+
+    # TASK 8 - CHANGE ONLY GROUP OF PROJECT1 USING CHGRP
+    PROJECT1="$BASE/project1"
+
+    PROJECT1_OWNER=$(stat -c %U "$PROJECT1" 2>/dev/null)
+    PROJECT1_GROUP=$(stat -c %G "$PROJECT1" 2>/dev/null)
+
+    if [ -d "$PROJECT1" ] &&
+       [ "$PROJECT1_OWNER" = "$STUDENT_NAME" ] &&
+       [ "$PROJECT1_GROUP" = "admins" ]; then
+
+        pass "Task 8: project1 directory group changed to admins using chgrp"
+    else
+        fail "Task 8: project1 directory owner or group is incorrect"
+    fi
+
+    # TASK 9 - CHANGE BOTH OWNER AND GROUP OF PROJECT2
+    PROJECT2="$BASE/project2"
+
+    PROJECT2_OWNER=$(stat -c %U "$PROJECT2" 2>/dev/null)
+    PROJECT2_GROUP=$(stat -c %G "$PROJECT2" 2>/dev/null)
+
+    if [ -d "$PROJECT2" ] &&
+       [ "$PROJECT2_OWNER" = "smith" ] &&
+       [ "$PROJECT2_GROUP" = "admins" ]; then
+
+        pass "Task 9: project2 directory owner and group changed correctly"
+    else
+        fail "Task 9: project2 directory owner or group is incorrect"
+    fi
+
+    # TASK 10 - RECURSIVE CHOWN OF BACKUP
+    TASK10_OK=1
+
+    for ITEM in \
+        "$BASE/backup" \
+        "$BASE/backup/backup1.txt" \
+        "$BASE/backup/backup2.txt"
+    do
+
+        if [ ! -e "$ITEM" ]; then
+            TASK10_OK=0
+            continue
+        fi
+
+        OWNER=$(stat -c %U "$ITEM" 2>/dev/null)
+        GROUP=$(stat -c %G "$ITEM" 2>/dev/null)
+
+        [ "$OWNER" = "smith" ] || TASK10_OK=0
+        [ "$GROUP" = "admins" ] || TASK10_OK=0
+
+    done
+
+    if [ "$TASK10_OK" -eq 1 ]; then
+        pass "Task 10: backup ownership changed recursively to smith:admins"
+    else
+        fail "Task 10: Recursive ownership of backup is incorrect"
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=================================================================================
+
+validate_lab208_linux_file_links() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 208 - Linux File Links: Hard Links and Soft Links..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/links_lab"
+
+    TOTAL_TASKS=17
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux File Links: Hard Links and Soft Links"
+    DATE=$(date "+%F %T")
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - DIRECTORY STRUCTURE
+    TASK1_OK=1
+
+    [ -d "$BASE" ] || TASK1_OK=0
+
+    for DIR in \
+        "$BASE/data" \
+        "$BASE/reports" \
+        "$BASE/backup" \
+        "$BASE/application" \
+        "$BASE/tmp"
+    do
+        if [ ! -d "$DIR" ]; then 
+            TASK1_OK=0
+        fi
+    done
+
+    for FILE in \
+        "$BASE/data/customer.txt" \
+        "$BASE/backup/application.log"
+    do
+        if [ ! -f "$FILE" ]; then 
+            TASK1_OK=0
+        fi
+    done
+
+    if [ "$TASK1_OK" -eq 1 ]; then
+        pass "Task 1: links_lab directory structure created successfully"
+    else
+        fail "Task 1: Required directories or files are missing"
+    fi
+
+    # TASK 2 - CREATE AND VERIFY ORIGINAL FILE
+    CUSTOMER="$BASE/data/customer.txt"
+
+    TASK2_OK=1
+
+    [ -f "$CUSTOMER" ] || TASK2_OK=0
+
+    if [ -f "$CUSTOMER" ]; then
+
+        grep -Fxq "Customer Database" \
+            "$CUSTOMER" || TASK2_OK=0
+
+        grep -Fxq "Application: Customer Portal" \
+            "$CUSTOMER" || TASK2_OK=0
+
+        grep -Fxq "Environment: Production" \
+            "$CUSTOMER" || TASK2_OK=0
+
+    fi
+
+    if [ "$TASK2_OK" -eq 1 ]; then
+        pass "Task 2: customer.txt created with required original content"
+    else
+        fail "Task 2: customer.txt is missing or required content is incorrect"
+    fi
+
+    # TASK 3 - CREATE HARD LINK
+    HARD_CUSTOMER="$BASE/reports/customer_hard.txt"
+
+    if [ ! -e "$HARD_CUSTOMER" ] &&
+       [ -f "$CUSTOMER" ]; then
+
+        pass "Task 3: customer hard-link workflow completed"
+
+    else
+        fail "Task 3: customer hard-link workflow was not completed correctly"
+    fi
+
+    # TASK 4 - VERIFY HARD LINK SAME INODE
+    if [ ! -e "$HARD_CUSTOMER" ] &&
+       [ -f "$CUSTOMER" ]; then
+
+        pass "Task 4: hard-link inode relationship workflow completed"
+
+    else
+        fail "Task 4: hard-link relationship could not be verified"
+    fi
+
+    # TASK 5 - MODIFY ORIGINAL FILE
+    TASK5_EVIDENCE="$BASE/tmp/task5_customer.txt"
+
+    TASK5_OK=1
+
+    [ -f "$TASK5_EVIDENCE" ] || TASK5_OK=0
+
+    if [ -f "$TASK5_EVIDENCE" ]; then
+
+        grep -Fxq "Customer Database" \
+            "$TASK5_EVIDENCE" || TASK5_OK=0
+
+        grep -Fxq "Application: Customer Portal" \
+            "$TASK5_EVIDENCE" || TASK5_OK=0
+
+        grep -Fxq "Environment: Production" \
+            "$TASK5_EVIDENCE" || TASK5_OK=0
+
+        grep -Fxq "Last Updated: 2026-08-16" \
+            "$TASK5_EVIDENCE" || TASK5_OK=0
+
+    fi
+
+    if [ "$TASK5_OK" -eq 1 ]; then
+        pass "Task 5: customer.txt was modified with Last Updated entry"
+    else
+        fail "Task 5: Task 5 evidence is missing or Last Updated entry is incorrect"
+    fi
+
+
+    # TASK 6 - MODIFY FILE THROUGH HARD LINK
+    TASK6_EVIDENCE="$BASE/tmp/task6_customer.txt"
+
+    TASK6_OK=1
+
+    [ -f "$TASK6_EVIDENCE" ] || TASK6_OK=0
+
+    if [ -f "$TASK6_EVIDENCE" ]; then
+
+        grep -Fxq "Customer Database" \
+            "$TASK6_EVIDENCE" || TASK6_OK=0
+
+        grep -Fxq "Application: Customer Portal" \
+            "$TASK6_EVIDENCE" || TASK6_OK=0
+
+        grep -Fxq "Environment: Production" \
+            "$TASK6_EVIDENCE" || TASK6_OK=0
+
+        grep -Fxq "Last Updated: 2026-08-16" \
+            "$TASK6_EVIDENCE" || TASK6_OK=0
+
+        grep -Fxq "Updated By: Reporting Team" \
+            "$TASK6_EVIDENCE" || TASK6_OK=0
+
+    fi
+
+    if [ "$TASK6_OK" -eq 1 ]; then
+        pass "Task 6: customer database was modified through the hard link"
+    else
+        fail "Task 6: Task 6 evidence is missing or Reporting Team update is incorrect"
+    fi
+
+    # TASK 7 - CREATE SYMBOLIC LINK TO CUSTOMER FILE
+    CUSTOMER_SOFT="$BASE/application/customer_soft.txt"
+
+    # The symbolic link is removed in Task 17. Validate final state.
+    if [ ! -e "$CUSTOMER_SOFT" ] &&
+       [ -f "$CUSTOMER" ]; then
+
+        pass "Task 7: customer symbolic-link workflow completed"
+
+    else
+        fail "Task 7: customer symbolic-link workflow incomplete"
+    fi
+
+    # TASK 8 - COMPARE HARD LINK / SOFT LINK
+    if [ -f "$CUSTOMER" ] &&
+       [ ! -e "$CUSTOMER_SOFT" ]; then
+
+        pass "Task 8: hard-link and symbolic-link comparison workflow completed"
+
+    else
+        fail "Task 8: link comparison requirements could not be verified"
+    fi
+
+    # TASK 9 - CREATE HARD LINK TO APPLICATION LOG
+    MOVED_LOG="$BASE/backup/application.log"
+    HARD_LOG="$BASE/backup/application_hard.log"
+
+    TASK9_OK=1
+
+    [ -f "$MOVED_LOG" ] || TASK9_OK=0
+
+    if [ -f "$MOVED_LOG" ]; then
+
+        grep -Fxq "Application: Started" \
+            "$MOVED_LOG" || TASK9_OK=0
+
+        grep -Fxq "Database Connection: Successful" \
+            "$MOVED_LOG" || TASK9_OK=0
+
+        grep -Fxq "Application Status: Running" \
+            "$MOVED_LOG" || TASK9_OK=0
+
+    fi
+
+    # Hard link must have been removed in Task 17.
+    [ ! -e "$HARD_LOG" ] || TASK9_OK=0
+
+    if [ "$TASK9_OK" -eq 1 ]; then
+        pass "Task 9: application log hard-link workflow completed"
+    else
+        fail "Task 9: application log hard-link workflow is incomplete"
+    fi
+
+    # TASK 10 - CREATE SYMBOLIC LINK TO APPLICATION LOG
+    SOFT_LOG="$BASE/reports/application_soft.log"
+
+    if [ ! -e "$SOFT_LOG" ] &&
+       [ -f "$MOVED_LOG" ]; then
+
+        pass "Task 10: application log symbolic-link workflow completed"
+
+    else
+        fail "Task 10: application log symbolic-link workflow incomplete"
+    fi
+
+    # TASK 11 - HARD LINK, SOFT LINK AND COPY
+    COPY_LOG="$BASE/backup/application_copy.log"
+
+    TASK11_OK=1
+
+    [ -f "$COPY_LOG" ] || TASK11_OK=0
+    [ -f "$MOVED_LOG" ] || TASK11_OK=0
+
+    # Copy must NOT contain the later update.
+    if [ -f "$COPY_LOG" ]; then
+
+        if grep -Fxq "Here is new update" "$COPY_LOG"; then
+            TASK11_OK=0
+        fi
+
+    fi
+
+    # Original/moved file must contain the update.
+    if [ -f "$MOVED_LOG" ]; then
+
+        grep -Fxq "Here is new update" \
+            "$MOVED_LOG" || TASK11_OK=0
+
+    fi
+
+    # Copy must have a different inode.
+    if [ -f "$MOVED_LOG" ] &&
+       [ -f "$COPY_LOG" ]; then
+
+        ORIGINAL_INODE=$(stat -c %i "$MOVED_LOG" 2>/dev/null)
+        COPY_INODE=$(stat -c %i "$COPY_LOG" 2>/dev/null)
+
+        [ -n "$ORIGINAL_INODE" ] || TASK11_OK=0
+        [ -n "$COPY_INODE" ] || TASK11_OK=0
+
+        [ "$ORIGINAL_INODE" != "$COPY_INODE" ] || TASK11_OK=0
+
+    fi
+
+    if [ "$TASK11_OK" -eq 1 ]; then
+        pass "Task 11: hard link, symbolic link, and file copy behavior demonstrated"
+    else
+        fail "Task 11: hard link, symbolic link, or copy behavior is incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 12 - DELETE ORIGINAL FILE AND TEST HARD LINK
+    TASK12_OK=1
+
+    [ -f "$CUSTOMER" ] || TASK12_OK=0
+    [ ! -e "$HARD_CUSTOMER" ] || TASK12_OK=0
+
+    if [ "$TASK12_OK" -eq 1 ]; then
+        pass "Task 12: original customer file deletion and hard-link workflow completed"
+    else
+        fail "Task 12: original customer deletion/hard-link workflow incomplete"
+    fi
+
+    # TASK 13 - TEST BROKEN SYMBOLIC LINK
+    if [ -f "$CUSTOMER" ] &&
+       [ ! -e "$CUSTOMER_SOFT" ]; then
+
+        pass "Task 13: symbolic-link broken-target workflow completed"
+
+    else
+        fail "Task 13: symbolic-link broken-target workflow incomplete"
+    fi
+
+    # TASK 14 - RE-CREATE ORIGINAL CUSTOMER.TXT
+    TASK14_OK=1
+
+    [ -f "$CUSTOMER" ] || TASK14_OK=0
+
+    if [ -f "$CUSTOMER" ]; then
+
+        grep -Fxq "Customer Database" \
+            "$CUSTOMER" || TASK14_OK=0
+
+        grep -Fxq "Application: Customer Portal" \
+            "$CUSTOMER" || TASK14_OK=0
+
+        grep -Fxq "Environment: Production" \
+            "$CUSTOMER" || TASK14_OK=0
+
+        grep -Fxq "Status: Restored" \
+            "$CUSTOMER" || TASK14_OK=0
+
+    fi
+
+    if [ "$TASK14_OK" -eq 1 ]; then
+        pass "Task 14: customer.txt successfully recreated with restored content"
+    else
+        fail "Task 14: recreated customer.txt is missing or content is incorrect"
+    fi
+
+    # TASK 15 - SYMBOLIC LINK TO DIRECTORY
+    PRODUCTION_DATA="$BASE/production_data"
+
+    # Link is removed in Task 17. Verify final state.
+    if [ ! -e "$PRODUCTION_DATA" ] &&
+       [ -d "$BASE/data" ] &&
+       [ -f "$CUSTOMER" ]; then
+
+        pass "Task 15: production_data symbolic-link workflow completed"
+
+    else
+        fail "Task 15: production_data symbolic-link workflow incomplete"
+    fi
+
+    # TASK 16 - MOVE SYMBOLIC-LINK TARGET
+    TASK16_OK=1
+
+    # application.log must no longer exist in data.
+    [ ! -e "$BASE/data/application.log" ] || TASK16_OK=0
+
+    # application.log must exist in backup.
+    [ -f "$BASE/backup/application.log" ] || TASK16_OK=0
+
+    # The symbolic link was removed in Task 17.
+    [ ! -e "$SOFT_LOG" ] || TASK16_OK=0
+
+    if [ -f "$MOVED_LOG" ]; then
+
+        grep -Fxq "Application: Started" \
+            "$MOVED_LOG" || TASK16_OK=0
+
+        grep -Fxq "Database Connection: Successful" \
+            "$MOVED_LOG" || TASK16_OK=0
+
+        grep -Fxq "Application Status: Running" \
+            "$MOVED_LOG" || TASK16_OK=0
+
+        grep -Fxq "Here is new update" \
+            "$MOVED_LOG" || TASK16_OK=0
+
+    fi
+
+    if [ "$TASK16_OK" -eq 1 ]; then
+        pass "Task 16: symbolic-link target moved and broken-link behavior demonstrated"
+    else
+        fail "Task 16: application.log was not moved correctly or final link state is incorrect"
+    fi
+
+    # TASK 17 - SAFELY REMOVE LINKS
+    TASK17_OK=1
+
+    # Verify validation/tmp directory and evidence files
+    [ -d "$BASE/tmp" ] || TASK17_OK=0
+
+    [ -f "$BASE/tmp/task5_customer.txt" ] || TASK17_OK=0
+    [ -f "$BASE/tmp/task6_customer.txt" ] || TASK17_OK=0
+
+    # Verify Task 5 evidence
+    if [ -f "$BASE/tmp/task5_customer.txt" ]; then
+
+        grep -Fxq "Last Updated: 2026-08-16" \
+            "$BASE/tmp/task5_customer.txt" || TASK17_OK=0
+
+    fi
+
+    # Verify Task 6 evidence
+    if [ -f "$BASE/tmp/task6_customer.txt" ]; then
+
+        grep -Fxq "Updated By: Reporting Team" \
+            "$BASE/tmp/task6_customer.txt" || TASK17_OK=0
+
+    fi
+
+    # Verify symbolic links were removed
+    [ ! -e "$BASE/application/customer_soft.txt" ] || TASK17_OK=0
+    [ ! -e "$BASE/reports/application_soft.log" ] || TASK17_OK=0
+    [ ! -e "$BASE/production_data" ] || TASK17_OK=0
+
+    # Verify hard links were removed
+    [ ! -e "$BASE/reports/customer_hard.txt" ] || TASK17_OK=0
+    [ ! -e "$BASE/backup/application_hard.log" ] || TASK17_OK=0
+
+    # Verify required directories still exist
+    [ -d "$BASE/data" ] || TASK17_OK=0
+    [ -d "$BASE/reports" ] || TASK17_OK=0
+    [ -d "$BASE/backup" ] || TASK17_OK=0
+    [ -d "$BASE/application" ] || TASK17_OK=0
+    [ -d "$BASE/tmp" ] || TASK17_OK=0
+
+    # Final result
+    if [ "$TASK17_OK" -eq 1 ]; then
+
+        pass "Task 17: links safely removed and lab files preserved"
+
+    else
+
+        fail "Task 17: link cleanup or required lab files are incomplete"
+
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=====================================================================
+
+validate_lab209_linux_admin_onboarding() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 209 - Linux Administrator Onboarding..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/webshop"
+    KIT="/tmp/onboarding_kit"
+
+    TOTAL_TASKS=28
+    PASSED=0
+
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Linux Administrator Onboarding"
+    DATE=$(date "+%F %T")
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # TASK 1 - READ THE TICKET / NAVIGATION
+    if [ -d "$BASE" ]; then
+    
+        pass "Task 1: onboarding ticket and kit verifiedi and ready to inspect"
+    else
+        fail "Task 1: onboarding ticket or kit is missing"
+    fi
+
+
+    # TASK 2 - READ THE TICKET
+    if [ -d "$BASE" ]; then
+    
+        pass "Task 2: ticket file TICKET_4471.txt was successfully accessed"
+    else
+        fail "Task 2: ticket file TICKET_4471.txt could not be verified"
+    fi
+
+
+    # ============================================================
+    # TASK 3 - CREATE WEBSHOP
+    # ============================================================
+
+    if [ -d "$BASE" ]; then
+        pass "Task 3: webshop workspace created"
+    else
+        fail "Task 3: webshop directory is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 4 - CREATE PROJECT DIRECTORIES
+    # ============================================================
+
+    TASK4_OK=1
+
+    for DIR in \
+        "$BASE/app" \
+        "$BASE/docs" \
+        "$BASE/secrets" \
+        "$BASE/reports"
+    do
+        [ -d "$DIR" ] || TASK4_OK=0
+    done
+
+    if [ "$TASK4_OK" -eq 1 ]; then
+        pass "Task 4: project directories created successfully"
+    else
+        fail "Task 4: one or more required project directories are missing"
+    fi
+
+
+    # ============================================================
+    # TASK 5 - CREATE NESTED DIRECTORY
+    # ============================================================
+
+    if [ -d "$BASE/app/src/utils" ]; then
+        pass "Task 5: nested app/src/utils directory created"
+    else
+        fail "Task 5: app/src/utils directory is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 6 - CREATE REPORT FILE
+    # ============================================================
+
+    REPORT="$BASE/reports/TICKET_4471_DONE.txt"
+
+    if [ -f "$REPORT" ] ; then
+        pass "Task 6: onboarding report file created"
+    else
+        fail "Task 6: onboarding_report.txt is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 7 - WHOAMI AND ID AUDIT
+    # ============================================================
+
+    AUDIT="$BASE/reports/server_audit.txt"
+
+    TASK7_OK=1
+
+    [ -f "$AUDIT" ] || TASK7_OK=0
+
+    if [ -f "$AUDIT" ]; then
+
+        grep -Fxq "$STUDENT_NAME" "$AUDIT" || TASK7_OK=0
+
+        grep -q "uid=" "$AUDIT" || TASK7_OK=0
+
+    fi
+
+    if [ "$TASK7_OK" -eq 1 ]; then
+        pass "Task 7: username and user/group information recorded"
+    else
+        fail "Task 7: username or id information is missing from server_audit.txt"
+    fi
+
+
+    # ============================================================
+    # TASK 8 - SYSTEM INFORMATION AUDIT
+    # ============================================================
+
+    TASK8_OK=1
+
+    [ -f "$AUDIT" ] || TASK8_OK=0
+
+    if [ -f "$AUDIT" ]; then
+
+        grep -q "$BASE" "$AUDIT" || TASK8_OK=0
+        grep -q "Linux" "$AUDIT" || TASK8_OK=0
+        grep -q "load average" "$AUDIT" || TASK8_OK=0
+        grep -q "Mem" "$AUDIT" || TASK8_OK=0
+
+    fi
+
+    if [ "$TASK8_OK" -eq 1 ]; then
+        pass "Task 8: system information recorded in server_audit.txt"
+    else
+        fail "Task 8: required system information is missing from audit file"
+    fi
+
+
+    # ============================================================
+    # TASK 9 - VERIFY AUDIT / HEAD
+    # ============================================================
+
+    TASK9_OK=1
+
+    [ -f "$AUDIT" ] || TASK9_OK=0
+
+    if [ -f "$AUDIT" ]; then
+
+        AUDIT_LINES=$(wc -l < "$AUDIT" 2>/dev/null)
+
+        [ "$AUDIT_LINES" -ge 7 ] || TASK9_OK=0
+
+        HEAD_LINES=$(head -n 3 "$AUDIT" 2>/dev/null | wc -l)
+
+        [ "$HEAD_LINES" -eq 3 ] || TASK9_OK=0
+
+    fi
+
+    if [ "$TASK9_OK" -eq 1 ]; then
+        pass "Task 9: server audit verified and first three lines available"
+    else
+        fail "Task 9: server audit file is incomplete"
+    fi
+
+
+    # ============================================================
+    # TASK 10 - COPY APP TEMPLATE
+    # ============================================================
+    START="$BASE/app/start.sh"
+    if [ -f "$START" ]; then
+
+        pass "Task 10: app_template.sh copied and renamed to start.sh"
+    else
+        fail "Task 10: app/start.sh is missing or incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 11 - COPY HANDBOOK
+    # ============================================================
+    HANDBOOK="$BASE/docs/handbook.txt"
+    if [ -f "$HANDBOOK" ]; then
+
+        pass "Task 11: handbook.txt copied into docs"
+    else
+        fail "Task 11: docs/handbook.txt is missing or incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 12 - COPY WELCOME TEMPLATE
+    # ============================================================
+    WELCOME="$BASE/docs/welcome_badsha.txt"
+
+    if [ -f "$WELCOME" ]; then
+            pass "Task 12: welcome template copied as welcome_badsha.txt"
+        else
+            fail "Task 12: welcome_badsha.txt is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 13 - COPY PASSWORD FILE
+    # ============================================================
+    PASSWORD_FILE="$BASE/secrets/db_password.txt"
+
+    if [ -f "$PASSWORD_FILE" ]; then
+
+        pass "Task 13: db_password.txt copied into secrets"
+    else
+        fail "Task 13: secrets/db_password.txt is missing or incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 14 - PERSONALIZE WELCOME FILE
+    # ============================================================
+    EXPECTED_WELCOME="Welcome badsha! Your admin is: $STUDENT_NAME"
+
+    if [ -f "$WELCOME" ] &&
+       grep -Fxq "$EXPECTED_WELCOME" "$WELCOME"; then
+
+        pass "Task 14: welcome file personalized correctly"
+    else
+        fail "Task 14: expected personalized welcome line is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 15 - BACKUP AND RENAME DOCS
+    # ============================================================
+
+    ARCHIVE="$BASE/reports/docs_archive"
+
+    TASK15_OK=1
+
+    [ -d "$ARCHIVE" ] || TASK15_OK=0
+
+    [ -f "$ARCHIVE/handbook.txt" ] || TASK15_OK=0
+    [ -f "$ARCHIVE/welcome_badsha.txt" ] || TASK15_OK=0
+
+    # docs_backup should have been renamed.
+    [ ! -e "$BASE/reports/docs_backup" ] || TASK15_OK=0
+
+    if [ "$TASK15_OK" -eq 1 ]; then
+        pass "Task 15: docs directory copied and renamed to docs_archive"
+    else
+        fail "Task 15: docs archive is missing or incorrectly named"
+    fi
+
+
+    # ============================================================
+    # TASK 16 - HEAD AND TAIL ACCESS LOG
+    # ============================================================
+    EVIDENCE="$BASE/reports/badsha_access.txt"
+    if [ -f "$EVIDENCE" ] &&
+       grep -Eiq "APPROVED" "$EVIDENCE" &&
+       grep -Eiq "DENIED" "$EVIDENCE"; then
+        pass "Task 16: access log inspected using head and tail"
+    else
+        fail "Task 16: access log or required head/tail output could not be verified"
+    fi
+
+    # ============================================================
+    # TASK 17 - FIND BADSHA IN ROSTER
+    # ============================================================
+    if [ -f "$EVIDENCE" ] &&
+       grep -iq "badsha" "$EVIDENCE"; then
+
+        pass "Task 17: badsha found in team roster"
+    else
+        fail "Task 17: badsha could not be found in team roster"
+    fi
+
+
+    # ============================================================
+    # TASK 18 - VERIFY APPROVED AND DENIED ACCESS
+    # ============================================================
+    if [ -f "$EVIDENCE" ] &&
+       grep -Eiq "APPROVED" "$EVIDENCE" &&
+       grep -Eiq "DENIED" "$EVIDENCE"; then
+
+       pass "Task 18: Badsha approved and denied access verified"
+    else
+       fail "Task 18: Badsha access approval/denial could not be verified"
+    fi
+
+    # ============================================================
+    # TASK 19 - SAVE ACCESS EVIDENCE
+    # ============================================================
+
+    EVIDENCE="$BASE/reports/badsha_access.txt"
+
+    TASK19_OK=1
+
+    [ -f "$EVIDENCE" ] || TASK19_OK=0
+
+    if [ -f "$EVIDENCE" ]; then
+
+        grep -iq "badsha" "$EVIDENCE" || TASK19_OK=0
+
+        EVIDENCE_LINES=$(wc -l < "$EVIDENCE" 2>/dev/null)
+
+        [ "$EVIDENCE_LINES" -ge 2 ] || TASK19_OK=0
+
+    fi
+
+    if [ "$TASK19_OK" -eq 1 ]; then
+        pass "Task 19: badsha access evidence saved successfully"
+    else
+        fail "Task 19: badsha_access.txt is missing or incomplete"
+    fi
+
+
+    # ============================================================
+    # TASK 20 - APP PERMISSIONS 775
+    # ============================================================
+
+    APP_MODE=$(stat -c "%a" "$BASE/app" 2>/dev/null)
+
+    if [ "$APP_MODE" = "775" ]; then
+        pass "Task 20: app directory permissions set to 775"
+    else
+        fail "Task 20: app directory permissions are not 775"
+    fi
+
+
+    # ============================================================
+    # TASK 21 - START.SH OWNER EXECUTABLE
+    # ============================================================
+    if [ -f "$START" ] &&
+       [ -x "$START" ]; then    
+
+        pass "Task 21: app/start.sh is executable by its owner"
+    else
+        fail "Task 21: app/start.sh owner execute permission is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 22 - SECRETS PERMISSIONS
+    # ============================================================
+
+    SECRET_DIR_MODE=$(stat -c "%a" "$BASE/secrets" 2>/dev/null)
+    SECRET_FILE_MODE=$(stat -c "%a" "$BASE/secrets/db_password.txt" 2>/dev/null)
+
+    if [ "$SECRET_DIR_MODE" = "770" ] &&
+       [ "$SECRET_FILE_MODE" = "660" ]; then
+
+        pass "Task 22: secrets permissions correctly configured"
+    else
+        fail "Task 22: secrets directory or db_password.txt permissions are incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 23 - CHOWN WELCOME FILE TO BADSHA
+    # ============================================================
+    WELCOME_OWNER=$(stat -c "%U" "$WELCOME" 2>/dev/null)
+
+    if [ -f "$WELCOME" ] &&
+       [ "$WELCOME_OWNER" = "badsha" ]; then
+
+        pass "Task 23: welcome_badsha.txt ownership changed to badsha"
+    else
+        fail "Task 23: welcome_badsha.txt owner is not badsha"
+    fi
+
+
+    # ============================================================
+    # TASK 24 - CHGRP START.SH TO DEVELOPERS
+    # ============================================================
+
+    START_GROUP=$(stat -c "%G" "$START" 2>/dev/null)
+
+    if [ -f "$START" ] &&
+       [ "$START_GROUP" = "developers" ]; then
+
+        pass "Task 24: app/start.sh group changed to developers"
+    else
+        fail "Task 24: app/start.sh group is not developers"
+    fi
+
+
+    # ============================================================
+    # TASK 25 - RECURSIVE CHGRP APP
+    # ============================================================
+
+    TASK25_OK=1
+
+    if [ -d "$BASE/app" ]; then
+
+        while IFS= read -r ITEM; do
+
+            ITEM_GROUP=$(stat -c "%G" "$ITEM" 2>/dev/null)
+
+            if [ "$ITEM_GROUP" != "developers" ]; then
+                TASK25_OK=0
+            fi
+
+        done < <(find "$BASE/app" -print)
+
+    else
+        TASK25_OK=0
+    fi
+
+    if [ "$TASK25_OK" -eq 1 ]; then
+        pass "Task 25: entire app directory recursively belongs to developers"
+    else
+        fail "Task 25: one or more app files/directories are not in developers group"
+    fi
+
+
+    # ============================================================
+    # TASK 26 - SECRETS OWNER AND GROUP
+    # ============================================================
+
+    TASK26_OK=1
+
+    if [ -d "$BASE/secrets" ]; then
+
+        while IFS= read -r ITEM; do
+
+            ITEM_OWNER=$(stat -c "%U" "$ITEM" 2>/dev/null)
+            ITEM_GROUP=$(stat -c "%G" "$ITEM" 2>/dev/null)
+
+            if [ "$ITEM_OWNER" != "$STUDENT_NAME" ] ||
+               [ "$ITEM_GROUP" != "admins" ]; then
+
+                TASK26_OK=0
+            fi
+
+        done < <(find "$BASE/secrets" -print)
+
+    else
+        TASK26_OK=0
+    fi
+
+    if [ "$TASK26_OK" -eq 1 ]; then
+        pass "Task 26: secrets recursively owned by student and admins group"
+    else
+        fail "Task 26: secrets owner/group is incorrect"
+    fi
+
+
+    # ============================================================
+    # TASK 27 - PROTECT OWNERSHIP
+    # ============================================================
+
+    HANDBOOK="$BASE/docs/handbook.txt"
+
+    TASK27_OK=1
+
+    [ -f "$HANDBOOK" ] || TASK27_OK=0
+
+    if [ -f "$HANDBOOK" ]; then
+
+        HANDBOOK_OWNER=$(stat -c "%U" "$HANDBOOK" 2>/dev/null)
+
+        # Student should still own the file.
+        [ "$HANDBOOK_OWNER" = "$STUDENT_NAME" ] || TASK27_OK=0
+
+        # Student must not have successfully transferred it to root.
+        [ "$HANDBOOK_OWNER" != "root" ] || TASK27_OK=0
+
+    fi
+
+    if [ "$TASK27_OK" -eq 1 ]; then
+        pass "Task 27: handbook ownership remains protected"
+    else
+        fail "Task 27: handbook ownership was incorrectly changed"
+    fi
+
+
+    # ============================================================
+    # TASK 28 - CLOSE THE TICKET
+    # ============================================================
+
+    FINAL_REPORT="$BASE/reports/TICKET_4471_DONE.txt"
+    if [ -f "$REPORT" ] &&
+       grep -Fq "badsha onboarded by" "$REPORT"; then
+
+        pass "Task 28: ticket completion note created and report renamed"
+    else
+        fail "Task 28: ticket completion report is missing or incorrectly named"
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+     
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=====================================================================
+
