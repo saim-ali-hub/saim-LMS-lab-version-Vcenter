@@ -3824,3 +3824,432 @@ HTML
 
 #=====================================================================
 
+validate_lab210_tar_backup_management() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 210 - Tape Archive (TAR) & backup Management..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/tar_lab"
+
+    TOTAL_TASKS=13
+    PASSED=0
+   
+    LAB_NAME="Lab ${LAB_NUMBER#lab} - Tape Archive (TAR) & backup Management"
+    DATE=$(date "+%F %T")
+
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        PASSED=$((PASSED + 1))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    PROJECT="$BASE/project"
+    ACTIVITY="$BASE/activity"
+    BACKUP="$BASE/backup"
+    RESTORE="$BASE/restore"
+
+    # ============================================================
+    # TASK 1
+    # Verify tar_lab directory exists and belongs to student
+    # ============================================================
+
+    if [ -d "$BASE" ] &&
+       [ "$(stat -c %U "$BASE" 2>/dev/null)" = "$STUDENT_NAME" ]; then
+
+        pass "Task 1: tar_lab copied and ownership verified"
+
+    else
+
+        fail "Task 1: tar_lab or ownership verification failed"
+
+    fi
+
+
+    # ============================================================
+    # TASK 2
+    # Verify project.tar exists, is valid, contains project/,
+    # and original project directory exists
+    # ============================================================
+
+    if [ -f "$BASE/project.tar" ] &&
+       tar -tf "$BASE/project.tar" >/dev/null 2>&1 &&
+       tar -tf "$BASE/project.tar" 2>/dev/null | grep -Eq '^project/' &&
+       [ -d "$PROJECT" ]; then
+
+        pass "Task 2: uncompressed TAR archive created and verified"
+
+    else
+
+        fail "Task 2: project.tar is missing or invalid"
+
+    fi
+
+
+    # ============================================================
+    # TASK 3
+    # Verify TAR contents were listed and saved
+    # ============================================================
+
+    if [ -f "$ACTIVITY/project_tar.txt" ] &&
+       grep -q "project/" "$ACTIVITY/project_tar.txt" 2>/dev/null; then
+
+        pass "Task 3: TAR contents listed and saved successfully"
+
+    else
+
+        fail "Task 3: project_tar.txt is missing or incomplete"
+
+    fi
+
+
+    # ============================================================
+    # TASK 4
+    # Verify project archive was extracted into backup
+    # ============================================================
+
+    if [ -d "$BACKUP/project" ] &&
+       [ -f "$BACKUP/project/documents/handbook.txt" ] &&
+       [ -f "$BACKUP/project/images/banner.jpg" ] &&
+       [ -f "$BACKUP/project/logs/application.log" ] &&
+       [ -f "$BACKUP/project/reports/financial.txt" ] &&
+       [ -f "$BACKUP/project/scripts/backup.sh" ]; then
+
+        pass "Task 4: project archive extracted into backup successfully"
+
+    else
+
+        fail "Task 4: project was not correctly restored into backup"
+
+    fi
+
+
+    # ============================================================
+    # TASK 5
+    # Verify project archive was extracted into restore
+    # ============================================================
+
+    if [ -d "$RESTORE/project" ] &&
+       [ -f "$RESTORE/project/documents/policy.txt" ] &&
+       [ -f "$RESTORE/project/images/logo.jpg" ] &&
+       [ -f "$RESTORE/project/logs/system.log" ]; then
+
+        pass "Task 5: project archive extracted into restore successfully"
+
+    else
+
+        fail "Task 5: project was not correctly restored into restore"
+
+    fi
+
+
+    # ============================================================
+    # TASK 6
+    # Verify gzip-compressed TAR archive
+    # ============================================================
+
+    if [ -f "$BASE/project.tar.gz" ] &&
+       gzip -t "$BASE/project.tar.gz" >/dev/null 2>&1 &&
+       tar -tzf "$BASE/project.tar.gz" 2>/dev/null | grep -Eq '^project/'; then
+
+        pass "Task 6: gzip-compressed TAR archive created and verified"
+
+    else
+
+        fail "Task 6: project.tar.gz is missing or invalid"
+
+    fi
+
+
+    # ============================================================
+    # TASK 7
+    # Verify gzip archive contents were listed and saved
+    # ============================================================
+
+    if [ -f "$ACTIVITY/project_tar_gz.txt" ] &&
+       grep -q "project/" "$ACTIVITY/project_tar_gz.txt" 2>/dev/null; then
+
+        pass "Task 7: gzip archive contents listed and saved"
+
+    else
+
+        fail "Task 7: project_tar_gz.txt is missing or incomplete"
+
+    fi
+
+
+    # ============================================================
+    # TASK 8
+    # Verify gzip archive was extracted into activity
+    # ============================================================
+
+    if [ -d "$ACTIVITY/project" ] &&
+       [ -f "$ACTIVITY/project/documents/handbook.txt" ] &&
+       [ -f "$ACTIVITY/project/logs/application.log" ]; then
+
+        pass "Task 8: gzip archive extracted into activity successfully"
+
+    else
+
+        fail "Task 8: gzip archive was not correctly extracted"
+
+    fi
+
+
+    # ============================================================
+    # TASK 9
+    # Verify bzip2-compressed logs archive
+    # ============================================================
+
+    if [ -f "$BASE/logs.tar.bz2" ] &&
+       bzip2 -t "$BASE/logs.tar.bz2" >/dev/null 2>&1 &&
+       tar -tjf "$BASE/logs.tar.bz2" 2>/dev/null | grep -Eq '^project/logs/'; then
+
+        pass "Task 9: bzip2-compressed logs archive created and verified"
+
+    else
+
+        fail "Task 9: logs.tar.bz2 is missing or invalid"
+
+    fi
+
+
+    # ============================================================
+    # TASK 10
+    # Verify bzip2 archive contents were listed and saved
+    # ============================================================
+
+    if [ -f "$ACTIVITY/logs_tar_bz2.txt" ] &&
+       grep -q "project/logs/" "$ACTIVITY/logs_tar_bz2.txt" 2>/dev/null; then
+
+        pass "Task 10: bzip2 archive contents listed and saved"
+
+    else
+
+        fail "Task 10: logs_tar_bz2.txt is missing or incomplete"
+
+    fi
+
+
+    # ============================================================
+    # TASK 11
+    # Verify bzip2 archive was extracted into backup
+    # ============================================================
+
+    if [ -d "$BACKUP/project/logs" ] &&
+       [ -f "$BACKUP/project/logs/application.log" ] &&
+       [ -f "$BACKUP/project/logs/system.log" ]; then
+
+        pass "Task 11: bzip2 archive extracted into backup successfully"
+
+    else
+
+        fail "Task 11: logs were not correctly restored into backup"
+
+    fi
+
+
+    # ============================================================
+    # TASK 12
+    # Verify collaboration.tar contains reports and scripts
+    # and listing was saved
+    # ============================================================
+
+    if [ -f "$BASE/collaboration.tar" ] &&
+       tar -tf "$BASE/collaboration.tar" >/dev/null 2>&1 &&
+       tar -tf "$BASE/collaboration.tar" 2>/dev/null | grep -Eq '^project/reports/' &&
+       tar -tf "$BASE/collaboration.tar" 2>/dev/null | grep -Eq '^project/scripts/' &&
+       [ -f "$ACTIVITY/collaborative_tar1.txt" ]; then
+
+        pass "Task 12: reports and scripts archived successfully"
+
+    else
+
+        fail "Task 12: collaboration.tar is missing or incomplete"
+
+    fi
+
+
+    # ============================================================
+    # TASK 13
+    # Verify images were added to existing collaboration.tar
+    # ============================================================
+
+    if [ -f "$BASE/collaboration.tar" ] &&
+       tar -tf "$BASE/collaboration.tar" >/dev/null 2>&1 &&
+       tar -tf "$BASE/collaboration.tar" 2>/dev/null | grep -Eq '^project/reports/' &&
+       tar -tf "$BASE/collaboration.tar" 2>/dev/null | grep -Eq '^project/scripts/' &&
+       tar -tf "$BASE/collaboration.tar" 2>/dev/null | grep -Eq '^project/images/' &&
+       [ -f "$ACTIVITY/collaborative_tar2.txt" ]; then
+
+        pass "Task 13: images directory added to existing TAR archive"
+
+    else
+
+        fail "Task 13: images directory was not added correctly"
+
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#=======================================================================
+

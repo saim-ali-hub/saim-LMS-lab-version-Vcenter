@@ -45,6 +45,11 @@
         "file": "lab209.json"
     },
     {
+        "category": "Linux",
+        "name": "lab 210 - Tape Archive (TAR) & backup Management",
+        "file": "lab210.json"
+    },
+    {
         "category": "Amazon Web Services",
         "name": "Lab101 - Launch an AWS EC2 Linux Instance (Amazon Linux 2023)",
         "file": "lab101.json"

@@ -76,6 +76,9 @@ case "$LAB_NUMBER" in
     lab209)
         validate_lab209_linux_admin_onboarding
         ;;
+    lab210)
+        validate_lab210_tar_backup_management
+        ;;
     *)
 
         echo "Invalid lab: $LAB_NUMBER"

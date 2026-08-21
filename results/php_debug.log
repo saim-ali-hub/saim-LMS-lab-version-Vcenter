@@ -1,0 +1,21 @@
+2026-08-16 23:26:30
+PHP UID: uid=48(apache) gid=48(apache) groups=48(apache) context=system_u:system_r:httpd_t:s0
+PHP SELINUX: system_u:system_r:httpd_t:s0
+PHP TMP: drwxrwxrwt. 2 root root 6 Aug 13 15:30 /tmp
+PHP KIT: ls: cannot access '/tmp/onboarding_kit': No such file or directory
+PHP KIT FILE: cat: /tmp/onboarding_kit/TICKET_4471.txt: No such file or directory
+
+2026-08-16 23:27:26
+PHP UID: uid=48(apache) gid=48(apache) groups=48(apache) context=system_u:system_r:httpd_t:s0
+PHP SELINUX: system_u:system_r:httpd_t:s0
+PHP TMP: drwxrwxrwt. 2 root root 6 Aug 13 15:30 /tmp
+PHP KIT: ls: cannot access '/tmp/onboarding_kit': No such file or directory
+PHP KIT FILE: cat: /tmp/onboarding_kit/TICKET_4471.txt: No such file or directory
+
+2026-08-16 23:27:45
+PHP UID: uid=48(apache) gid=48(apache) groups=48(apache) context=system_u:system_r:httpd_t:s0
+PHP SELINUX: system_u:system_r:httpd_t:s0
+PHP TMP: drwxrwxrwt. 2 root root 6 Aug 13 15:30 /tmp
+PHP KIT: ls: cannot access '/tmp/onboarding_kit': No such file or directory
+PHP KIT FILE: cat: /tmp/onboarding_kit/TICKET_4471.txt: No such file or directory
+
