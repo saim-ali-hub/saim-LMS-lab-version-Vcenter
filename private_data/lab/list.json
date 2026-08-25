@@ -29,7 +29,36 @@
         "name": "lab 206 - Linux File Permissions II",
         "file": "lab206.json"
     },
-   
+    {
+        "category": "Linux",
+        "name": "lab 207 - Ownership and Group Management",
+        "file": "lab207.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 208 - Linux File Links: Hard Links and Soft Links",
+        "file": "lab208.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 209 - Operation First Day: Onboard the New Developer",
+        "file": "lab209.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 210 - Tape Archive (TAR) & backup Management",
+        "file": "lab210.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 211 - Production Customer Portal File Management and Backup",
+        "file": "lab211.json"
+    },
+    {
+        "category": "Linux",
+        "name": "lab 212 - Find and Grep Commands",
+        "file": "lab212.json"
+    },
     {
         "category": "Amazon Web Services",
         "name": "Lab101 - Launch an AWS EC2 Linux Instance (Amazon Linux 2023)",
