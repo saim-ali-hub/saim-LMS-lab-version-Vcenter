@@ -610,45 +610,67 @@ chmod 755 "$LIBEXEC/mkdir"
 # CP FROM /etc/skel
 # ============================================================
 
-cat > "$LIBEXEC/cp" <<'EOF'
 #!/bin/bash
 
 REAL="/usr/bin/cp"
 
-# Supported form:
+# ============================================================
+# LINOOP Restricted cp wrapper
+#
+# Allowed:
 #
 #   sudo cp -a /etc/skel/. /home/USERNAME/
 #
-# Only /etc/skel -> /home/USERNAME is permitted.
+# Purpose:
+#   Allow students to populate a newly created user home
+#   directory from /etc/skel.
+#
+# Normal file copying should be done without sudo.
+# ============================================================
+
+# ------------------------------------------------------------
+# Require exactly:
+#
+#   -a
+#   /etc/skel/.
+#   /home/USERNAME/
+# ------------------------------------------------------------
 
 if [ "$#" -ne 3 ]; then
-    echo "Usage: sudo cp -a /etc/skel/. /home/<username>/"
+    echo "Usage: sudo cp -a /etc/skel/. /home/USERNAME/"
     exit 1
 fi
 
 if [ "$1" != "-a" ]; then
-    echo "ERROR: Only cp -a is permitted."
+    echo "ERROR: Only the -a option is permitted."
     exit 1
 fi
 
 SOURCE="$2"
 TARGET="$3"
 
-if [[ "$SOURCE" != "/etc/skel/." && "$SOURCE" != "/etc/skel" ]]; then
-    echo "ERROR: Source must be /etc/skel."
-    exit 1
-fi
+case "$SOURCE" in
+    /etc/skel/.|/etc/skel)
+        ;;
+    *)
+        echo "ERROR: Source must be /etc/skel/."
+        exit 1
+        ;;
+esac
 
 if [[ "$TARGET" != /home/* ]]; then
-    echo "ERROR: Destination must be under /home."
+    echo "ERROR: Destination must be /home/USERNAME."
     exit 1
 fi
 
 USERNAME="${TARGET#/home/}"
+
+# Remove trailing slash if present
 USERNAME="${USERNAME%/}"
 
+# No subdirectories
 if [[ "$USERNAME" == */* || -z "$USERNAME" ]]; then
-    echo "ERROR: Only /home/USERNAME is permitted."
+    echo "ERROR: Destination must be /home/USERNAME."
     exit 1
 fi
 
@@ -658,19 +680,16 @@ if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
 fi
 
 if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
-    echo "ERROR: User does not exist."
+    echo "ERROR: User '$USERNAME' does not exist."
     exit 1
 fi
 
 if [ ! -d "/home/$USERNAME" ]; then
-    echo "ERROR: Home directory does not exist."
+    echo "ERROR: Home directory /home/$USERNAME does not exist."
     exit 1
 fi
 
-exec "$REAL" "$@"
-EOF
-
-chmod 755 "$LIBEXEC/cp"
+exec "$REAL" -a /etc/skel/. "/home/$USERNAME/"
 
 
 # ============================================================
