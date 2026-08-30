@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # ============================================================
 # LINOOP Manual Account Entry Wrappers
 # ============================================================
@@ -38,11 +36,6 @@ set -e
 LIBEXEC="/usr/local/libexec/linoop"
 BIN="/usr/local/bin"
 
-REAL_MKDIR="/usr/bin/mkdir"
-REAL_CHOWN="/usr/bin/chown"
-REAL_CHMOD="/usr/bin/chmod"
-REAL_CAT="/usr/bin/cat"
-
 # ------------------------------------------------------------
 # Root check
 # ------------------------------------------------------------
@@ -52,13 +45,11 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Create directories using REAL system commands
-"$REAL_MKDIR" -p "$LIBEXEC"
-"$REAL_MKDIR" -p "$BIN"
+mkdir -p "$LIBEXEC"
+mkdir -p "$BIN"
 
-"$REAL_CHOWN" root:root "$LIBEXEC" "$BIN"
-
-"$REAL_CHMOD" 755 "$LIBEXEC" "$BIN"
+chown root:root "$LIBEXEC" "$BIN"
+chmod 755 "$LIBEXEC" "$BIN"
 
 
 # ============================================================
@@ -115,29 +106,29 @@ if getent passwd "$USERNAME" >/dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------------
-# UID
+# USER_UID
 # ------------------------------------------------------------
 
-read -r -p "UID: " UID
+read -r -p "UID: " USER_UID
 
-if [[ ! "$UID" =~ ^[0-9]+$ ]]; then
+if [[ ! "$USER_UID" =~ ^[0-9]+$ ]]; then
     echo "ERROR: UID must be numeric."
     exit 1
 fi
 
-if [ "$UID" -lt 1000 ]; then
+if [ "$USER_UID" -lt 1000 ]; then
     echo "ERROR: UID must be 1000 or greater."
     echo "System/service UIDs are not permitted."
     exit 1
 fi
 
-if [ "$UID" -gt 60000 ]; then
+if [ "$USER_UID" -gt 60000 ]; then
     echo "ERROR: UID is outside the permitted range."
     exit 1
 fi
 
-if getent passwd "$UID" >/dev/null 2>&1; then
-    echo "ERROR: UID '$UID' is already in use."
+if getent passwd "$USER_UID" >/dev/null 2>&1; then
+    echo "ERROR: UID '$USER_UID' is already in use."
     exit 1
 fi
 
@@ -145,20 +136,20 @@ fi
 # GID
 # ------------------------------------------------------------
 
-read -r -p "GID: " GID
+read -r -p "GID: " USER_GID
 
-if [[ ! "$GID" =~ ^[0-9]+$ ]]; then
+if [[ ! "$USER_GID" =~ ^[0-9]+$ ]]; then
     echo "ERROR: GID must be numeric."
     exit 1
 fi
 
-if [ "$GID" -lt 1000 ]; then
+if [ "$USER_GID" -lt 1000 ]; then
     echo "ERROR: GID must be 1000 or greater."
     echo "System/service groups are not permitted."
     exit 1
 fi
 
-if [ "$GID" -gt 60000 ]; then
+if [ "$USER_GID" -gt 60000 ]; then
     echo "ERROR: GID is outside the permitted range."
     exit 1
 fi
@@ -167,11 +158,11 @@ fi
 # Check GID exists
 # ------------------------------------------------------------
 
-if getent group "$GID" >/dev/null 2>&1; then
+if getent group "$USER_GID" >/dev/null 2>&1; then
     echo
-    echo "WARNING: GID '$GID' already exists."
+    echo "WARNING: GID '$USER_GID' and will be used as the primary group."
     echo
-    getent group "$GID"
+    getent group "$USER_GID"
     echo
     read -r -p "Use this existing GID? [y/N]: " ANSWER
 
@@ -256,6 +247,17 @@ if [ ! -x "$SHELL" ]; then
 fi
 
 # ------------------------------------------------------------
+# Check GID exists
+# ------------------------------------------------------------
+
+if ! getent group "$USER_GID" >/dev/null 2>&1; then
+    echo "ERROR: GID '$USER_GID' does not exist."
+    echo "Create the group first using sudo group-entry."
+    exit 1
+fi
+
+
+# ------------------------------------------------------------
 # Final validation
 # ------------------------------------------------------------
 
@@ -266,14 +268,14 @@ echo "----------------------------------------------"
 echo
 echo "Username : $USERNAME"
 echo "Password : x"
-echo "UID      : $UID"
-echo "GID      : $GID"
+echo "UID      : $USER_UID"
+echo "GID      : $USER_GID"
 echo "GECOS    : $GECOS"
 echo "Home     : $HOME_DIR"
 echo "Shell    : $SHELL"
 echo
 echo "Entry:"
-echo "$USERNAME:x:$UID:$GID:$GECOS:$HOME_DIR:$SHELL"
+echo "$USERNAME:x:$USER_UID:$USER_GID:$GECOS:$HOME_DIR:$SHELL"
 echo
 
 read -r -p "Add this entry to /etc/passwd? [y/N]: " ANSWER
@@ -296,7 +298,7 @@ if getent passwd "$USERNAME" >/dev/null 2>&1; then
     exit 1
 fi
 
-if getent passwd "$UID" >/dev/null 2>&1; then
+if getent passwd "$USER_UID" >/dev/null 2>&1; then
     echo "ERROR: UID was assigned by another process."
     exit 1
 fi
@@ -305,7 +307,7 @@ fi
 # Append entry
 # ------------------------------------------------------------
 
-printf '%s\n' "$USERNAME:x:$UID:$GID:$GECOS:$HOME_DIR:$SHELL" >> "$PASSWD_FILE"
+printf '%s\n' "$USERNAME:x:$USER_UID:$USER_GID:$GECOS:$HOME_DIR:$SHELL" >> "$PASSWD_FILE"
 
 echo
 echo "SUCCESS: User entry added to /etc/passwd."
@@ -326,10 +328,6 @@ echo
 exit 0
 EOF
 
-
-"$REAL_CHMOD" 755 "$LIBEXEC/passwd-entry"
-"$REAL_CHOWN" root:root "$LIBEXEC/passwd-entry"
-
 # ============================================================
 # group-entry
 # ============================================================
@@ -348,7 +346,7 @@ USERNAME_REGEX='^[a-z_][a-z0-9._-]*[$]?$'
 
 echo
 echo "=============================================="
-echo " LINOOP Manual /etc/group Entry"
+echo " Manual /etc/group Entry"
 echo "=============================================="
 echo
 
@@ -358,6 +356,7 @@ echo "Required format:"
 echo
 echo "groupname:x:GID:user1,user2"
 echo
+echo "The 'x' field will automatically be set."
 
 # ------------------------------------------------------------
 # Group name
@@ -386,26 +385,26 @@ fi
 # GID
 # ------------------------------------------------------------
 
-read -r -p "GID: " GID
+read -r -p "GID: " USER_GID
 
-if [[ ! "$GID" =~ ^[0-9]+$ ]]; then
+if [[ ! "$USER_GID" =~ ^[0-9]+$ ]]; then
     echo "ERROR: GID must be numeric."
     exit 1
 fi
 
-if [ "$GID" -lt 1000 ]; then
+if [ "$USER_GID" -lt 1000 ]; then
     echo "ERROR: GID must be 1000 or greater."
     echo "System/service groups are not permitted."
     exit 1
 fi
 
-if [ "$GID" -gt 60000 ]; then
+if [ "$USER_GID" -gt 60000 ]; then
     echo "ERROR: GID is outside the permitted range."
     exit 1
 fi
 
-if getent group "$GID" >/dev/null 2>&1; then
-    echo "ERROR: GID '$GID' is already in use."
+if getent group "$USER_GID" >/dev/null 2>&1; then
+    echo "ERROR: GID '$USER_GID' is already in use."
     exit 1
 fi
 
@@ -461,11 +460,11 @@ echo "Review /etc/group entry"
 echo "----------------------------------------------"
 echo
 echo "Group   : $GROUPNAME"
-echo "GID     : $GID"
+echo "GID     : $USER_GID"
 echo "Members : $MEMBERS"
 echo
 echo "Entry:"
-echo "$GROUPNAME:x:$GID:$MEMBERS"
+echo "$GROUPNAME:x:$USER_GID:$MEMBERS"
 echo
 
 read -r -p "Add this entry to /etc/group? [y/N]: " ANSWER
@@ -488,7 +487,7 @@ if getent group "$GROUPNAME" >/dev/null 2>&1; then
     exit 1
 fi
 
-if getent group "$GID" >/dev/null 2>&1; then
+if getent group "$USER_GID" >/dev/null 2>&1; then
     echo "ERROR: GID was assigned by another process."
     exit 1
 fi
@@ -497,14 +496,14 @@ fi
 # Append entry
 # ------------------------------------------------------------
 
-printf '%s\n' "$GROUPNAME:x:$GID:$MEMBERS" >> "$GROUP_FILE"
+printf '%s\n' "$GROUPNAME:x:$USER_GID:$MEMBERS" >> "$GROUP_FILE"
 
 echo
 echo "SUCCESS: Group entry added to /etc/group."
 echo
 echo "Verify with:"
 echo "  getent group $GROUPNAME"
-echo "  grep '^$GROUPNAME:' /etc/group"
+echo "  grep '^{$GROUPNAME}:' /etc/group"
 echo
 
 exit 0
