@@ -1,0 +1,105 @@
+[root@student-linux-01 ~]$ ls -l /usr/local/bin/
+total 64
+-rwxr-xr-x. 1 root root 56 Aug 30 07:22 chage
+-rwxr-xr-x. 1 root root 56 Aug 30 07:22 chmod
+-rwxr-xr-x. 1 root root 56 Aug 30 07:22 chown
+-rwxr-xr-x. 1 root root 58 Aug 30 07:22 gpasswd
+-rwxr-xr-x. 1 root root 59 Aug 30 07:22 groupadd
+-rwxr-xr-x. 1 root root 59 Aug 30 07:22 groupdel
+-rwxr-xr-x. 1 root root 62 Aug 30 08:06 group-entry
+-rwxr-xr-x. 1 root root 59 Aug 30 07:22 groupmod
+-rwxr-xr-x. 1 root root 56 Aug 30 07:22 mkdir
+-rwxr-xr-x. 1 root root 57 Aug 30 07:22 passwd
+-rwxr-xr-x. 1 root root 63 Aug 30 08:06 passwd-entry
+-rwxr-xr-x. 1 root root 53 Aug 30 07:22 su
+-rwxr-xr-x. 1 root root 58 Aug 30 07:22 useradd
+-rwxr-xr-x. 1 root root 58 Aug 30 07:22 userdel
+-rwxr-xr-x. 1 root root 58 Aug 30 07:22 usermod
+
+[root@student-linux-01 bin]# ls -l /usr/local/libexec/linoop/
+total 72
+-rwxr-xr-x. 1 root root  611 Aug 30 07:22 chage
+-rwxr-xr-x. 1 root root 3655 Aug 15 19:08 chgrp
+-rwxr-xr-x. 1 root root  835 Aug 30 07:22 chmod
+-rwxr-xr-x. 1 root root 3211 Aug 30 07:22 chown
+-rwxr-xr-x. 1 root root  970 Aug 30 07:22 gpasswd
+-rwxr-xr-x. 1 root root  552 Aug 30 07:22 groupadd
+-rwxr-xr-x. 1 root root  543 Aug 30 07:22 groupdel
+-rwxr-xr-x. 1 root root 4143 Aug 30 08:48 group-entry
+-rwxr-xr-x. 1 root root  861 Aug 30 07:22 groupmod
+-rwxr-xr-x. 1 root root  806 Aug 30 07:22 mkdir
+-rwxr-xr-x. 1 root root  760 Aug 30 07:22 passwd
+-rwxr-xr-x. 1 root root 6084 Aug 30 08:46 passwd-entry
+-rwxr-xr-x. 1 root root  705 Aug 30 07:22 su
+-rwxr-xr-x. 1 root root  757 Aug 30 07:22 useradd
+-rwxr-xr-x. 1 root root  913 Aug 30 07:22 userdel
+-rwxr-xr-x. 1 root root 1952 Aug 30 07:22 usermod
+
+[root@student-linux-01 bin]# cat /etc/sudoers.d/linoop-account-mgt
+# ============================================================
+# LINOOP restricted ownership management
+#
+# AD/SSSD group:
+#   domain users
+#
+# Students can use:
+#   sudo useradd
+#   sudo userdel
+#   sudo usermod
+#   sudo groupadd
+#   sudo groupdel
+#   sudo groupmod
+#   sudo gpasswd
+#   sudo passwd
+#   sudo chage
+#   sudo mkdir
+#   sudo cp
+#   sudo chown
+#   sudo chmod
+#   sudo su
+#   sudo chown USER /home/USER/file
+#   sudo chown USER:GROUP /home/USER/file
+#   sudo chown :GROUP /home/USER/file
+#   sudo chgrp GROUP /home/USER/file
+#
+# Recursive operations are supported with -R.
+#
+# sudo secure_path causes "sudo chown" and "sudo chgrp"
+# to resolve to the controlled wrappers below.
+# ============================================================
+
+Defaults:%domain\ users secure_path="/usr/local/bin:/usr/local/libexec/linoop:/sbin:/bin:/usr/sbin:/usr/bin"
+
+%domain\ users ALL=(root) NOPASSWD: /usr/local/bin/useradd *, /usr/local/bin/userdel *, /usr/local/bin/usermod *, /usr/local/bin/groupadd *, /usr/local/bin/groupdel *, /usr/local/bin/groupmod *, /usr/local/bin/gpasswd *, /usr/local/bin/passwd *, /usr/local/bin/chage *, /usr/local/bin/mkdir *, /usr/local/bin/chown *, /usr/local/bin/chmod *,  /usr/local/bin/su *, /usr/local/bin/passwd-entry, /usr/local/bin/group-entry
+
+
+[root@student-linux-01 bin]# cat /etc/sudoers.d/linoop-permissions
+%domain\ users ALL=(root) NOPASSWD: /usr/local/libexec/linoop/chgrp *
+
+
+
+Troubleshooting CP issue.
+#=========================
+rm -rf /usr/local/bin/cp
+rm -rf /usr/local/libexec/linoop/cp
+command -v cp
+
+You should get --> /usr/bin/cp
+
+type -a cp
+type -P cp
+command cp --version
+/usr/bin/cp --version
+ls -l /usr/bin/cp
+
+Remove ---> /usr/local/bin cp *    --> from  --> /etc/sudoers.d/linoop-account-mgt
+
+hash -r
+type -a cp
+
+Or simply 
+exit
+
+type -a cp
+
+
