@@ -70,7 +70,7 @@ total 72
 
 Defaults:%domain\ users secure_path="/usr/local/bin:/usr/local/libexec/linoop:/sbin:/bin:/usr/sbin:/usr/bin"
 
-%domain\ users ALL=(root) NOPASSWD: /usr/local/bin/useradd *, /usr/local/bin/userdel *, /usr/local/bin/usermod *, /usr/local/bin/groupadd *, /usr/local/bin/groupdel *, /usr/local/bin/groupmod *, /usr/local/bin/gpasswd *, /usr/local/bin/passwd *, /usr/local/bin/chage *, /usr/local/bin/mkdir *, /usr/local/bin/chown *, /usr/local/bin/chmod *,  /usr/local/bin/su *, /usr/local/bin/passwd-entry, /usr/local/bin/group-entry
+%domain\ users ALL=(root) NOPASSWD: /usr/local/bin/useradd *, /usr/local/bin/userdel *, /usr/local/bin/usermod *, /usr/local/bin/linoop-skel-copy *, /usr/local/bin/groupadd *, /usr/local/bin/groupdel *, /usr/local/bin/groupmod *, /usr/local/bin/gpasswd *, /usr/local/bin/passwd *, /usr/local/bin/chage *, /usr/local/bin/mkdir *, /usr/local/bin/chown *, /usr/local/bin/chmod *, /usr/local/bin/su *, /usr/local/bin/passwd-entry, /usr/local/bin/group-entry
 
 
 [root@student-linux-01 bin]# cat /etc/sudoers.d/linoop-permissions
@@ -80,26 +80,19 @@ Defaults:%domain\ users secure_path="/usr/local/bin:/usr/local/libexec/linoop:/s
 
 Troubleshooting CP issue.
 #=========================
-rm -rf /usr/local/bin/cp
-rm -rf /usr/local/libexec/linoop/cp
-command -v cp
+1010  chmod 755 /usr/local/libexec/linoop/skel-copy
+ 1011  chown root:root /usr/local/libexec/linoop/skel-copy
+ 1012  /usr/bin/chmod 755 /usr/local/libexec/linoop/skel-copy
+ 1013  /usr/bin/chown root:root /usr/local/libexec/linoop/skel-copy
+ 1014  /usr/bin/tee /usr/local/bin/linoop-skel-copy > /dev/null <<'EOF'
+#!/bin/bash
+exec /usr/local/libexec/linoop/skel-copy "$@"
+EOF
 
-You should get --> /usr/bin/cp
-
-type -a cp
-type -P cp
-command cp --version
-/usr/bin/cp --version
-ls -l /usr/bin/cp
-
-Remove ---> /usr/local/bin cp *    --> from  --> /etc/sudoers.d/linoop-account-mgt
-
-hash -r
-type -a cp
-
-Or simply 
-exit
-
-type -a cp
+ 1015  /usr/bin/chmod 755 /usr/local/bin/linoop-skel-copy
+ 1016  /usr/bin/chown root:root /usr/local/bin/linoop-skel-copy
+ 1017  ls -l /usr/local/bin/linoop-skel-copy
+ 1018  visudo /etc/sudoers.d/linoop-account-mgt
+ 1019  visudo -c
 
 
