@@ -28,7 +28,7 @@
 #   sudo useradd new-user
 #   sudo groupadd developers
 #   sudo mkdir /home/new-user
-#   sudo cp -a /etc/skel/. /home/new-user/
+#   sudo /usr/local/bin/linoop-skel-copy /home/new-user
 #   sudo chown -R new-user:new-user /home/new-user
 #   sudo chmod 700 /home/new-user
 #   sudo passwd new-user
@@ -615,48 +615,32 @@ chmod 755 "$LIBEXEC/mkdir"
 REAL="/usr/bin/cp"
 
 # ============================================================
-# LINOOP Restricted cp wrapper
+# LINOOP Restricted /etc/skel Copy
 #
 # Allowed:
 #
-#   sudo cp -a /etc/skel/. /home/USERNAME/
+#   sudo /usr/local/bin/linoop-skel-copy /home/USERNAME
 #
-# Purpose:
-#   Allow students to populate a newly created user home
-#   directory from /etc/skel.
+# This allows students to populate a newly created
+# user's home directory from /etc/skel.
 #
-# Normal file copying should be done without sudo.
+# Normal cp operations remain unrestricted.
 # ============================================================
 
 # ------------------------------------------------------------
-# Require exactly:
-#
-#   -a
-#   /etc/skel/.
-#   /home/USERNAME/
+# Require exactly one argument
 # ------------------------------------------------------------
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: sudo cp -a /etc/skel/. /home/USERNAME/"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: sudo /usr/local/bin/linoop-skel-copy /home/USERNAME"
     exit 1
 fi
 
-if [ "$1" != "-a" ]; then
-    echo "ERROR: Only the -a option is permitted."
-    exit 1
-fi
+TARGET="$1"
 
-SOURCE="$2"
-TARGET="$3"
-
-case "$SOURCE" in
-    /etc/skel/.|/etc/skel)
-        ;;
-    *)
-        echo "ERROR: Source must be /etc/skel/."
-        exit 1
-        ;;
-esac
+# ------------------------------------------------------------
+# Target must be directly under /home
+# ------------------------------------------------------------
 
 if [[ "$TARGET" != /home/* ]]; then
     echo "ERROR: Destination must be /home/USERNAME."
@@ -664,30 +648,43 @@ if [[ "$TARGET" != /home/* ]]; then
 fi
 
 USERNAME="${TARGET#/home/}"
-
-# Remove trailing slash if present
 USERNAME="${USERNAME%/}"
 
-# No subdirectories
 if [[ "$USERNAME" == */* || -z "$USERNAME" ]]; then
     echo "ERROR: Destination must be /home/USERNAME."
     exit 1
 fi
+
+# ------------------------------------------------------------
+# Validate username
+# ------------------------------------------------------------
 
 if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
     echo "ERROR: Invalid username."
     exit 1
 fi
 
+# ------------------------------------------------------------
+# User must exist
+# ------------------------------------------------------------
+
 if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
     echo "ERROR: User '$USERNAME' does not exist."
     exit 1
 fi
 
+# ------------------------------------------------------------
+# Home directory must exist
+# ------------------------------------------------------------
+
 if [ ! -d "/home/$USERNAME" ]; then
     echo "ERROR: Home directory /home/$USERNAME does not exist."
     exit 1
 fi
+
+# ------------------------------------------------------------
+# Copy /etc/skel
+# ------------------------------------------------------------
 
 exec "$REAL" -a /etc/skel/. "/home/$USERNAME/"
 
