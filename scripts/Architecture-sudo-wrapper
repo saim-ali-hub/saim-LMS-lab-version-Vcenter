@@ -95,3 +95,7 @@ EOF
  visudo /etc/sudoers.d/linoop-account-mgt
 visudo -c
 
+REGULAR USER WILL USE COMMAND TO COPY SKEL FILES
+===========================================================
+sudo /usr/local/bin/linoop-skel-copy /home/newuser
+
