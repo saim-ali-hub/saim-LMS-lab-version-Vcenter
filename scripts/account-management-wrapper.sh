@@ -1034,7 +1034,7 @@ chmod 755 "$BIN"/useradd \
           "$BIN"/passwd \
           "$BIN"/chage \
           "$BIN"/mkdir \
-          "$BIN"/cp \
+          "$BIN"/skel-copy \
           "$BIN"/chown \
           "$BIN"/chmod \
           "$BIN"/su
