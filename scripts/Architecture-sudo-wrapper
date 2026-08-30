@@ -80,19 +80,18 @@ Defaults:%domain\ users secure_path="/usr/local/bin:/usr/local/libexec/linoop:/s
 
 Troubleshooting CP issue.
 #=========================
-1010  chmod 755 /usr/local/libexec/linoop/skel-copy
- 1011  chown root:root /usr/local/libexec/linoop/skel-copy
- 1012  /usr/bin/chmod 755 /usr/local/libexec/linoop/skel-copy
- 1013  /usr/bin/chown root:root /usr/local/libexec/linoop/skel-copy
- 1014  /usr/bin/tee /usr/local/bin/linoop-skel-copy > /dev/null <<'EOF'
+chmod 755 /usr/local/libexec/linoop/skel-copy
+chown root:root /usr/local/libexec/linoop/skel-copy
+/usr/bin/chmod 755 /usr/local/libexec/linoop/skel-copy
+/usr/bin/chown root:root /usr/local/libexec/linoop/skel-copy
+/usr/bin/tee /usr/local/bin/linoop-skel-copy > /dev/null <<'EOF'
 #!/bin/bash
 exec /usr/local/libexec/linoop/skel-copy "$@"
 EOF
 
- 1015  /usr/bin/chmod 755 /usr/local/bin/linoop-skel-copy
- 1016  /usr/bin/chown root:root /usr/local/bin/linoop-skel-copy
- 1017  ls -l /usr/local/bin/linoop-skel-copy
- 1018  visudo /etc/sudoers.d/linoop-account-mgt
- 1019  visudo -c
-
+ /usr/bin/chmod 755 /usr/local/bin/linoop-skel-copy
+ /usr/bin/chown root:root /usr/local/bin/linoop-skel-copy
+ ls -l /usr/local/bin/linoop-skel-copy
+ visudo /etc/sudoers.d/linoop-account-mgt
+visudo -c
 
