@@ -1,0 +1,45 @@
+#!/bin/bash
+
+REAL="/usr/bin/mkdir"
+
+# Only allow:
+#
+#   sudo mkdir /home/USERNAME
+#
+# No -p, -m, --mode, or arbitrary directories.
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: sudo mkdir /home/<username>"
+    exit 1
+fi
+
+TARGET="$1"
+
+if [[ "$TARGET" != /home/* ]]; then
+    echo "ERROR: mkdir is restricted to /home."
+    exit 1
+fi
+
+USERNAME="${TARGET#/home/}"
+
+if [[ "$USERNAME" == */* || -z "$USERNAME" ]]; then
+    echo "ERROR: Only /home/USERNAME is permitted."
+    exit 1
+fi
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User does not exist."
+    exit 1
+fi
+
+if [ -e "$TARGET" ]; then
+    echo "ERROR: Directory already exists."
+    exit 1
+fi
+
+exec "$REAL" "$TARGET"

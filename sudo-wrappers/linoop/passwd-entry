@@ -1,0 +1,269 @@
+#!/bin/bash
+
+# ============================================================
+# LINOOP Manual /etc/passwd Entry
+# ============================================================
+
+PASSWD_FILE="/etc/passwd"
+
+USERNAME_REGEX='^[a-z_][a-z0-9._-]*[$]?$'
+SHELL_REGEX='^/(bin|sbin)/[a-zA-Z0-9._+-]+$'
+
+echo
+echo "=============================================="
+echo " Manual /etc/passwd Entry"
+echo "=============================================="
+echo
+
+echo "You will create ONE normal local user."
+echo
+echo "Required format:"
+echo
+echo "username:x:UID:GID:GECOS:/home/username:/bin/bash"
+echo
+echo "The password field will automatically be set to 'x'."
+echo "Use 'sudo passwd username' to set the password."
+echo
+
+# ------------------------------------------------------------
+# Username
+# ------------------------------------------------------------
+
+read -r -p "Username: " USERNAME
+
+if [[ ! "$USERNAME" =~ $USERNAME_REGEX ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if [ "$USERNAME" = "root" ]; then
+    echo "ERROR: root user cannot be created."
+    exit 1
+fi
+
+if getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User '$USERNAME' already exists."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# USER_UID
+# ------------------------------------------------------------
+
+read -r -p "UID: " USER_UID
+
+if [[ ! "$USER_UID" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: UID must be numeric."
+    exit 1
+fi
+
+if [ "$USER_UID" -lt 1000 ]; then
+    echo "ERROR: UID must be 1000 or greater."
+    echo "System/service UIDs are not permitted."
+    exit 1
+fi
+
+if [ "$USER_UID" -gt 60000 ]; then
+    echo "ERROR: UID is outside the permitted range."
+    exit 1
+fi
+
+if getent passwd "$USER_UID" >/dev/null 2>&1; then
+    echo "ERROR: UID '$USER_UID' is already in use."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# GID
+# ------------------------------------------------------------
+
+read -r -p "GID: " USER_GID
+
+if [[ ! "$USER_GID" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: GID must be numeric."
+    exit 1
+fi
+
+if [ "$USER_GID" -lt 1000 ]; then
+    echo "ERROR: GID must be 1000 or greater."
+    echo "System/service groups are not permitted."
+    exit 1
+fi
+
+if [ "$USER_GID" -gt 60000 ]; then
+    echo "ERROR: GID is outside the permitted range."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Check GID exists
+# ------------------------------------------------------------
+
+if getent group "$USER_GID" >/dev/null 2>&1; then
+    echo
+    echo "WARNING: GID '$USER_GID' and will be used as the primary group."
+    echo
+    getent group "$USER_GID"
+    echo
+    read -r -p "Use this existing GID? [y/N]: " ANSWER
+
+    case "$ANSWER" in
+        y|Y)
+            ;;
+        *)
+            echo "Entry creation cancelled."
+            exit 1
+            ;;
+    esac
+fi
+
+# ------------------------------------------------------------
+# GECOS
+# ------------------------------------------------------------
+
+read -r -p "GECOS/comment: " GECOS
+
+# Prevent characters that could corrupt /etc/passwd.
+if [[ "$GECOS" == *:* || "$GECOS" == *$'\n'* ]]; then
+    echo "ERROR: GECOS cannot contain ':' or newline characters."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Home directory
+# ------------------------------------------------------------
+
+read -r -p "Home directory [/home/$USERNAME]: " HOME_DIR
+
+if [ -z "$HOME_DIR" ]; then
+    HOME_DIR="/home/$USERNAME"
+fi
+
+if [ "$HOME_DIR" != "/home/$USERNAME" ]; then
+    echo "ERROR: Home directory must be:"
+    echo "       /home/$USERNAME"
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Login shell
+# ------------------------------------------------------------
+
+read -r -p "Login shell [/bin/bash]: " SHELL
+
+if [ -z "$SHELL" ]; then
+    SHELL="/bin/bash"
+fi
+
+case "$SHELL" in
+    /bin/bash)
+        ;;
+    /bin/sh)
+        ;;
+    /bin/dash)
+        ;;
+    /bin/zsh)
+        ;;
+    /bin/ksh)
+        ;;
+    /sbin/nologin)
+        ;;
+    *)
+        echo "ERROR: Login shell is not permitted."
+        echo
+        echo "Allowed shells:"
+        echo "  /bin/bash"
+        echo "  /bin/sh"
+        echo "  /bin/dash"
+        echo "  /bin/zsh"
+        echo "  /bin/ksh"
+        echo "  /sbin/nologin"
+        exit 1
+        ;;
+esac
+
+if [ ! -x "$SHELL" ]; then
+    echo "ERROR: Shell '$SHELL' does not exist or is not executable."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Check GID exists
+# ------------------------------------------------------------
+
+if ! getent group "$USER_GID" >/dev/null 2>&1; then
+    echo "ERROR: GID '$USER_GID' does not exist."
+    echo "Create the group first using sudo group-entry."
+    exit 1
+fi
+
+
+# ------------------------------------------------------------
+# Final validation
+# ------------------------------------------------------------
+
+echo
+echo "----------------------------------------------"
+echo "Review /etc/passwd entry"
+echo "----------------------------------------------"
+echo
+echo "Username : $USERNAME"
+echo "Password : x"
+echo "UID      : $USER_UID"
+echo "GID      : $USER_GID"
+echo "GECOS    : $GECOS"
+echo "Home     : $HOME_DIR"
+echo "Shell    : $SHELL"
+echo
+echo "Entry:"
+echo "$USERNAME:x:$USER_UID:$USER_GID:$GECOS:$HOME_DIR:$SHELL"
+echo
+
+read -r -p "Add this entry to /etc/passwd? [y/N]: " ANSWER
+
+case "$ANSWER" in
+    y|Y)
+        ;;
+    *)
+        echo "Entry creation cancelled."
+        exit 0
+        ;;
+esac
+
+# ------------------------------------------------------------
+# Final race/duplicate checks
+# ------------------------------------------------------------
+
+if getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User was created by another process."
+    exit 1
+fi
+
+if getent passwd "$USER_UID" >/dev/null 2>&1; then
+    echo "ERROR: UID was assigned by another process."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Append entry
+# ------------------------------------------------------------
+
+printf '%s\n' "$USERNAME:x:$USER_UID:$USER_GID:$GECOS:$HOME_DIR:$SHELL" >> "$PASSWD_FILE"
+
+echo
+echo "SUCCESS: User entry added to /etc/passwd."
+echo
+echo "Verify with:"
+echo "  getent passwd $USERNAME"
+echo "  id $USERNAME"
+echo
+echo "Next steps:"
+echo "  sudo mkdir $HOME_DIR"
+echo "  sudo cp -a /etc/skel/. $HOME_DIR/"
+echo "  sudo chown -R $USERNAME:$USERNAME $HOME_DIR"
+echo "  sudo chmod 700 $HOME_DIR"
+echo "  sudo passwd $USERNAME"
+echo "  sudo su - $USERNAME"
+echo
+
+exit 0

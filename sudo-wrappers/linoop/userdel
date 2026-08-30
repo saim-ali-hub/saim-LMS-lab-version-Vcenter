@@ -1,0 +1,49 @@
+#!/bin/bash
+
+REAL="/usr/sbin/userdel"
+
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    echo "Usage: sudo userdel [-r] <username>"
+    exit 1
+fi
+
+if [ "$1" = "-r" ]; then
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: sudo userdel [-r] <username>"
+        exit 1
+    fi
+
+    USERNAME="$2"
+    REMOVE_HOME=1
+else
+    USERNAME="$1"
+    REMOVE_HOME=0
+fi
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if [ "$USERNAME" = "root" ]; then
+    echo "ERROR: root cannot be deleted."
+    exit 1
+fi
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User '$USERNAME' does not exist."
+    exit 1
+fi
+
+UID_VALUE=$(id -u "$USERNAME")
+
+if [ "$UID_VALUE" -lt 1000 ]; then
+    echo "ERROR: System accounts cannot be deleted."
+    exit 1
+fi
+
+if [ "$REMOVE_HOME" -eq 1 ]; then
+    exec "$REAL" -r "$USERNAME"
+else
+    exec "$REAL" "$USERNAME"
+fi

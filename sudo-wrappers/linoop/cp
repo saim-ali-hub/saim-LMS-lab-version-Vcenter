@@ -1,0 +1,104 @@
+#!/bin/bash
+
+REAL="/usr/bin/cp"
+
+# ============================================================
+# LINOOP Restricted cp wrapper
+#
+# Allowed:
+#
+#   sudo cp -a /etc/skel/. /home/USERNAME/
+#
+# Purpose:
+#   Allow students to populate a newly created user home
+#   directory from /etc/skel.
+#
+# Normal file copying should be done without sudo.
+# ============================================================
+
+# ------------------------------------------------------------
+# Require exactly:
+#
+#   -a
+#   /etc/skel/.
+#   /home/USERNAME/
+# ------------------------------------------------------------
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage: sudo cp -a /etc/skel/. /home/USERNAME/"
+    exit 1
+fi
+
+if [ "$1" != "-a" ]; then
+    echo "ERROR: Only the -a option is permitted."
+    exit 1
+fi
+
+SOURCE="$2"
+TARGET="$3"
+
+# ------------------------------------------------------------
+# Source must be /etc/skel/.
+# ------------------------------------------------------------
+
+case "$SOURCE" in
+    /etc/skel/.|/etc/skel)
+        ;;
+    *)
+        echo "ERROR: Source must be /etc/skel/."
+        exit 1
+        ;;
+esac
+
+# ------------------------------------------------------------
+# Target must be /home/USERNAME
+# ------------------------------------------------------------
+
+if [[ "$TARGET" != /home/* ]]; then
+    echo "ERROR: Destination must be /home/USERNAME."
+    exit 1
+fi
+
+USERNAME="${TARGET#/home/}"
+
+# Remove trailing slash if present
+USERNAME="${USERNAME%/}"
+
+# No subdirectories
+if [[ "$USERNAME" == */* || -z "$USERNAME" ]]; then
+    echo "ERROR: Destination must be /home/USERNAME."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Validate username
+# ------------------------------------------------------------
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# User must exist
+# ------------------------------------------------------------
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User '$USERNAME' does not exist."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Destination must exist and be a directory
+# ------------------------------------------------------------
+
+if [ ! -d "/home/$USERNAME" ]; then
+    echo "ERROR: Home directory /home/$USERNAME does not exist."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Execute real cp
+# ------------------------------------------------------------
+
+exec "$REAL" -a /etc/skel/. "/home/$USERNAME/"

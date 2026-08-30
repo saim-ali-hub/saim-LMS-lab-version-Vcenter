@@ -1,0 +1,40 @@
+#!/bin/bash
+
+REAL="/usr/sbin/groupmod"
+
+if [ "$#" -ne 3 ] || [ "$1" != "-n" ]; then
+    echo "Usage: sudo groupmod -n <newname> <oldname>"
+    exit 1
+fi
+
+NEWNAME="$2"
+OLDNAME="$3"
+
+if [[ ! "$NEWNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid new group name."
+    exit 1
+fi
+
+if [[ ! "$OLDNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid old group name."
+    exit 1
+fi
+
+case "$OLDNAME" in
+    root|wheel|adm|bin|daemon|sys|tty|disk|mail|operator|users)
+        echo "ERROR: Reserved group cannot be modified."
+        exit 1
+        ;;
+esac
+
+if ! getent group "$OLDNAME" >/dev/null 2>&1; then
+    echo "ERROR: Group '$OLDNAME' does not exist."
+    exit 1
+fi
+
+if getent group "$NEWNAME" >/dev/null 2>&1; then
+    echo "ERROR: Group '$NEWNAME' already exists."
+    exit 1
+fi
+
+exec "$REAL" -n "$NEWNAME" "$OLDNAME"

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+REAL="/usr/sbin/usermod"
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage:"
+    echo "  sudo usermod -aG <group> <username>"
+    echo "  sudo usermod -L <username>"
+    echo "  sudo usermod -U <username>"
+    exit 1
+fi
+
+case "$1" in
+
+    -aG)
+
+        if [ "$#" -ne 3 ]; then
+            echo "Usage: sudo usermod -aG <group> <username>"
+            exit 1
+        fi
+
+        GROUP="$2"
+        USERNAME="$3"
+
+        if [[ ! "$GROUP" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+            echo "ERROR: Invalid group name."
+            exit 1
+        fi
+
+        if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+            echo "ERROR: Invalid username."
+            exit 1
+        fi
+
+        if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+            echo "ERROR: User '$USERNAME' does not exist."
+            exit 1
+        fi
+
+        if ! getent group "$GROUP" >/dev/null 2>&1; then
+            echo "ERROR: Group '$GROUP' does not exist."
+            exit 1
+        fi
+
+        exec "$REAL" -aG "$GROUP" "$USERNAME"
+        ;;
+
+    -L|-U)
+
+        if [ "$#" -ne 2 ]; then
+            echo "Usage: sudo usermod $1 <username>"
+            exit 1
+        fi
+
+        USERNAME="$2"
+
+        if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+            echo "ERROR: Invalid username."
+            exit 1
+        fi
+
+        if [ "$USERNAME" = "root" ]; then
+            echo "ERROR: root cannot be modified."
+            exit 1
+        fi
+
+        if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+            echo "ERROR: User does not exist."
+            exit 1
+        fi
+
+        exec "$REAL" "$1" "$USERNAME"
+        ;;
+
+    *)
+
+        echo "ERROR: This usermod operation is not permitted."
+        echo
+        echo "Allowed:"
+        echo "  sudo usermod -aG <group> <username>"
+        echo "  sudo usermod -L <username>"
+        echo "  sudo usermod -U <username>"
+        exit 1
+        ;;
+
+esac

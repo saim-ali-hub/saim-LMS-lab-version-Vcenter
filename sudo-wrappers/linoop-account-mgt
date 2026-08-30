@@ -1,0 +1,36 @@
+# ============================================================
+# LINOOP restricted ownership management
+#
+# AD/SSSD group:
+#   domain users
+#
+# Students can use:
+#   sudo useradd
+#   sudo userdel
+#   sudo usermod
+#   sudo groupadd
+#   sudo groupdel
+#   sudo groupmod
+#   sudo gpasswd
+#   sudo passwd
+#   sudo chage
+#   sudo mkdir
+#   sudo cp
+#   sudo chown
+#   sudo chmod
+#   sudo su
+#   sudo chown USER /home/USER/file
+#   sudo chown USER:GROUP /home/USER/file
+#   sudo chown :GROUP /home/USER/file
+#   sudo chgrp GROUP /home/USER/file
+#
+# Recursive operations are supported with -R.
+#
+# sudo secure_path causes "sudo chown" and "sudo chgrp"
+# to resolve to the controlled wrappers below.
+# ============================================================
+
+Defaults:%domain\ users secure_path="/usr/local/bin:/usr/local/libexec/linoop:/sbin:/bin:/usr/sbin:/usr/bin"
+
+%domain\ users ALL=(root) NOPASSWD: /usr/local/bin/useradd *, /usr/local/bin/userdel *, /usr/local/bin/usermod *, /usr/local/bin/cp *, /usr/local/bin/groupadd *, /usr/local/bin/groupdel *, /usr/local/bin/groupmod *, /usr/local/bin/gpasswd *, /usr/local/bin/passwd *, /usr/local/bin/chage *, /usr/local/bin/mkdir *, /usr/local/bin/chown *, /usr/local/bin/chmod *,  /usr/local/bin/su *, /usr/local/bin/passwd-entry, /usr/local/bin/group-entry
+

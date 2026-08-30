@@ -1,0 +1,52 @@
+#!/bin/bash
+
+REAL="/usr/bin/gpasswd"
+
+# Only permit:
+#
+#   gpasswd -a USER GROUP
+#   gpasswd -d USER GROUP
+#
+# This is enough for normal group membership exercises.
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage:"
+    echo "  sudo gpasswd -a <username> <group>"
+    echo "  sudo gpasswd -d <username> <group>"
+    exit 1
+fi
+
+ACTION="$1"
+USERNAME="$2"
+GROUP="$3"
+
+case "$ACTION" in
+    -a|-d)
+        ;;
+    *)
+        echo "ERROR: Only -a and -d are permitted."
+        exit 1
+        ;;
+esac
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if [[ ! "$GROUP" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid group name."
+    exit 1
+fi
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User does not exist."
+    exit 1
+fi
+
+if ! getent group "$GROUP" >/dev/null 2>&1; then
+    echo "ERROR: Group does not exist."
+    exit 1
+fi
+
+exec "$REAL" "$ACTION" "$USERNAME" "$GROUP"

@@ -1,0 +1,169 @@
+#!/bin/bash
+
+REAL="/usr/bin/chmod"
+
+# ============================================================
+# LINOOP Restricted chmod wrapper
+#
+# Allowed:
+#
+#   sudo chmod 700 /home/USERNAME
+#   sudo chmod 750 /home/USERNAME
+#   sudo chmod 755 /home/USERNAME
+#
+# Recursive:
+#
+#   sudo chmod -R 700 /home/USERNAME
+#   sudo chmod -R 750 /home/USERNAME
+#   sudo chmod -R 755 /home/USERNAME
+#
+# Purpose:
+#   Allow students to manage permissions on new user
+#   home directories while preventing arbitrary sudo chmod.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# Parse options
+# ------------------------------------------------------------
+
+RECURSIVE=0
+
+case "$1" in
+
+    -R|--recursive)
+        RECURSIVE=1
+        shift
+        ;;
+
+esac
+
+
+# ------------------------------------------------------------
+# Require MODE and TARGET
+# ------------------------------------------------------------
+
+if [ "$#" -ne 2 ]; then
+
+    echo "Usage:"
+    echo "  sudo chmod MODE /home/USERNAME"
+    echo "  sudo chmod -R MODE /home/USERNAME"
+
+    exit 1
+
+fi
+
+
+MODE="$1"
+TARGET="$2"
+
+
+# ------------------------------------------------------------
+# Only allow specific modes
+# ------------------------------------------------------------
+
+case "$MODE" in
+
+    700|750|755)
+        ;;
+
+    *)
+        echo "ERROR: Only the following modes are permitted:"
+        echo "  700"
+        echo "  750"
+        echo "  755"
+        exit 1
+        ;;
+
+esac
+
+
+# ------------------------------------------------------------
+# Target must be directly under /home
+# ------------------------------------------------------------
+
+if [[ "$TARGET" != /home/* ]]; then
+
+    echo "ERROR: chmod is restricted to /home/USERNAME."
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# Extract username
+# ------------------------------------------------------------
+
+USERNAME="${TARGET#/home/}"
+
+
+# ------------------------------------------------------------
+# Prevent subdirectories
+#
+# /home/joe       Allowed
+# /home/joe/docs  Not allowed
+# ------------------------------------------------------------
+
+if [[ "$USERNAME" == */* || -z "$USERNAME" ]]; then
+
+    echo "ERROR: Only /home/USERNAME is permitted."
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# Validate username format
+# ------------------------------------------------------------
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+
+    echo "ERROR: Invalid username."
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# Verify user exists
+# ------------------------------------------------------------
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+
+    echo "ERROR: User '$USERNAME' does not exist."
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# Verify home directory exists
+# ------------------------------------------------------------
+
+if [ ! -d "$TARGET" ]; then
+
+    echo "ERROR: Home directory does not exist:"
+    echo "  $TARGET"
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# Execute real chmod
+# ------------------------------------------------------------
+
+if [ "$RECURSIVE" -eq 1 ]; then
+
+    exec "$REAL" -R "$MODE" "$TARGET"
+
+else
+
+    exec "$REAL" "$MODE" "$TARGET"
+
+fi

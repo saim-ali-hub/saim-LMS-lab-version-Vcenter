@@ -1,0 +1,34 @@
+#!/bin/bash
+
+REAL="/usr/bin/chage"
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: sudo chage OPTIONS <username>"
+    exit 1
+fi
+
+USERNAME="${@: -1}"
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if [ "$USERNAME" = "root" ]; then
+    echo "ERROR: root cannot be modified."
+    exit 1
+fi
+
+if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User does not exist."
+    exit 1
+fi
+
+UID_VALUE=$(id -u "$USERNAME")
+
+if [ "$UID_VALUE" -lt 1000 ]; then
+    echo "ERROR: System accounts cannot be modified."
+    exit 1
+fi
+
+exec "$REAL" "$@"

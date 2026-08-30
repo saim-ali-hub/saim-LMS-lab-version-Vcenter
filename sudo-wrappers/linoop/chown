@@ -1,0 +1,365 @@
+#!/bin/bash
+
+REAL="/usr/bin/chown"
+
+# ============================================================
+# LINOOP Restricted chown wrapper
+#
+# Allowed:
+#
+#   sudo chown USER FILE
+#   sudo chown USER:GROUP FILE
+#   sudo chown :GROUP FILE
+#
+# Recursive:
+#
+#   sudo chown -R USER DIRECTORY
+#   sudo chown -R USER:GROUP DIRECTORY
+#   sudo chown -R :GROUP DIRECTORY
+#
+# Targets allowed:
+#
+#   1. Inside the calling user's own home directory
+#   2. A new user's home directory when assigning ownership
+#      to that same user
+#
+# Examples:
+#
+#   sudo chown -R joe:joe /home/joe
+#   sudo chown joe /home/joe/.bashrc
+#   sudo chown -R joe:developers /home/joe
+#
+# Not allowed:
+#
+#   sudo chown root:root /home/joe
+#   sudo chown saim:root /home/joe
+#   sudo chown joe:joe /home/naeem
+#   sudo chown joe:joe /etc/passwd
+#   sudo chown joe:joe /tmp/file
+# ============================================================
+
+
+# ------------------------------------------------------------
+# Identify the original sudo user
+# ------------------------------------------------------------
+
+CALLING_USER="${SUDO_USER:-}"
+
+if [ -z "$CALLING_USER" ] || [ "$CALLING_USER" = "root" ]; then
+    echo "ERROR: Invalid calling user."
+    exit 1
+fi
+
+
+# ------------------------------------------------------------
+# Find calling user's home directory
+# ------------------------------------------------------------
+
+USER_HOME=$(getent passwd "$CALLING_USER" | cut -d: -f6)
+
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+    echo "ERROR: Cannot determine home directory for $CALLING_USER."
+    exit 1
+fi
+
+REAL_HOME=$(realpath -e "$USER_HOME") || {
+    echo "ERROR: Cannot resolve home directory."
+    exit 1
+}
+
+
+# ------------------------------------------------------------
+# Parse options
+#
+# Allowed:
+#
+#   -R
+#   --recursive
+# ------------------------------------------------------------
+
+RECURSIVE=0
+
+while [ "$#" -gt 0 ]; do
+
+    case "$1" in
+
+        -R|--recursive)
+            RECURSIVE=1
+            shift
+            ;;
+
+        --)
+            shift
+            break
+            ;;
+
+        -*)
+            echo "ERROR: Option '$1' is not allowed."
+            exit 1
+            ;;
+
+        *)
+            break
+            ;;
+
+    esac
+
+done
+
+
+# ------------------------------------------------------------
+# Require OWNER[:GROUP] and target
+# ------------------------------------------------------------
+
+if [ "$#" -lt 2 ]; then
+
+    echo "Usage:"
+    echo "  sudo chown [ -R ] USER FILE..."
+    echo "  sudo chown [ -R ] USER:GROUP FILE..."
+    echo "  sudo chown [ -R ] :GROUP FILE..."
+
+    exit 1
+
+fi
+
+
+OWNER_SPEC="$1"
+shift
+
+
+# ------------------------------------------------------------
+# Separate owner and group
+#
+# Supported:
+#
+#   USER
+#   USER:GROUP
+#   :GROUP
+# ------------------------------------------------------------
+
+if [[ "$OWNER_SPEC" == :* ]]; then
+
+    OWNER=""
+    GROUP="${OWNER_SPEC#:}"
+
+elif [[ "$OWNER_SPEC" == *:* ]]; then
+
+    OWNER="${OWNER_SPEC%%:*}"
+    GROUP="${OWNER_SPEC#*:}"
+
+else
+
+    OWNER="$OWNER_SPEC"
+    GROUP=""
+
+fi
+
+
+# ------------------------------------------------------------
+# Validate ownership specification
+# ------------------------------------------------------------
+
+if [ -z "$OWNER" ] && [ -z "$GROUP" ]; then
+    echo "ERROR: Invalid ownership specification."
+    exit 1
+fi
+
+
+# ------------------------------------------------------------
+# root cannot be assigned as owner
+# ------------------------------------------------------------
+
+if [ "$OWNER" = "root" ]; then
+    echo "ERROR: Assigning root as the file owner is not permitted."
+    exit 1
+fi
+
+
+# ------------------------------------------------------------
+# Validate owner
+# ------------------------------------------------------------
+
+if [ -n "$OWNER" ]; then
+
+    if ! getent passwd "$OWNER" >/dev/null 2>&1; then
+        echo "ERROR: User '$OWNER' does not exist."
+        exit 1
+    fi
+
+fi
+
+
+# ------------------------------------------------------------
+# Validate group
+# ------------------------------------------------------------
+
+if [ -n "$GROUP" ]; then
+
+    if ! getent group "$GROUP" >/dev/null 2>&1; then
+        echo "ERROR: Group '$GROUP' does not exist."
+        exit 1
+    fi
+
+fi
+
+
+# ------------------------------------------------------------
+# Build chown arguments
+# ------------------------------------------------------------
+
+CHOWN_ARGS=()
+
+if [ "$RECURSIVE" -eq 1 ]; then
+    CHOWN_ARGS+=("-R")
+fi
+
+CHOWN_ARGS+=("$OWNER_SPEC")
+
+
+# ------------------------------------------------------------
+# Validate every target
+# ------------------------------------------------------------
+
+for TARGET in "$@"; do
+
+    # --------------------------------------------------------
+    # Target must exist
+    # --------------------------------------------------------
+
+    if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+
+        echo "ERROR: Target does not exist:"
+        echo "  $TARGET"
+
+        exit 1
+
+    fi
+
+
+    # --------------------------------------------------------
+    # Resolve actual path
+    # --------------------------------------------------------
+
+    REAL_TARGET=$(realpath -e "$TARGET" 2>/dev/null) || {
+
+        echo "ERROR: Cannot resolve target:"
+        echo "  $TARGET"
+
+        exit 1
+
+    }
+
+
+    # ========================================================
+    # CASE 1
+    #
+    # Target is inside calling user's own home directory.
+    #
+    # Example:
+    #
+    #   /home/saim/file.txt
+    #   /home/saim/project/file.txt
+    #
+    # ========================================================
+
+    case "$REAL_TARGET" in
+
+        "$REAL_HOME")
+            ALLOWED=1
+            ;;
+
+        "$REAL_HOME"/*)
+            ALLOWED=1
+            ;;
+
+        *)
+            ALLOWED=0
+            ;;
+
+    esac
+
+
+    # ========================================================
+    # CASE 2
+    #
+    # Target is another user's home directory.
+    #
+    # Only allow:
+    #
+    #   /home/joe
+    #
+    # when:
+    #
+    #   OWNER=joe
+    #
+    # This supports:
+    #
+    #   sudo chown -R joe:joe /home/joe
+    #
+    # after copying /etc/skel.
+    #
+    # ========================================================
+
+    if [ "$ALLOWED" -eq 0 ] && [ -n "$OWNER" ]; then
+
+        TARGET_USERNAME="${REAL_TARGET#/home/}"
+
+        if [[ "$TARGET_USERNAME" != */* ]] &&
+           [ -n "$TARGET_USERNAME" ] &&
+           [ "$TARGET_USERNAME" = "$OWNER" ]; then
+
+            # Confirm that this is actually the owner's
+            # configured home directory.
+
+            OWNER_HOME=$(getent passwd "$OWNER" | cut -d: -f6)
+
+            if [ -n "$OWNER_HOME" ]; then
+
+                REAL_OWNER_HOME=$(realpath -e "$OWNER_HOME" 2>/dev/null)
+
+                if [ "$REAL_TARGET" = "$REAL_OWNER_HOME" ]; then
+                    ALLOWED=1
+                fi
+
+            fi
+
+        fi
+
+    fi
+
+
+    # --------------------------------------------------------
+    # Final access check
+    # --------------------------------------------------------
+
+    if [ "$ALLOWED" -ne 1 ]; then
+
+        echo "ERROR: Access denied."
+        echo
+        echo "Allowed:"
+        echo "  Your own home directory:"
+        echo "    $REAL_HOME"
+
+        if [ -n "$OWNER" ]; then
+            echo
+            echo "  New user's home directory when assigning"
+            echo "  ownership to that same user:"
+            echo "    /home/$OWNER"
+        fi
+
+        echo
+        echo "Requested target:"
+        echo "  $TARGET"
+
+        exit 1
+
+    fi
+
+done
+
+
+# ------------------------------------------------------------
+# Execute real chown
+# ------------------------------------------------------------
+
+exec "$REAL" "${CHOWN_ARGS[@]}" "$@"

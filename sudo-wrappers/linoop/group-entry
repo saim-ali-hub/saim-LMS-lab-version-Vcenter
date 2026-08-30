@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# ============================================================
+# LINOOP Manual /etc/group Entry
+# ============================================================
+
+GROUP_FILE="/etc/group"
+
+GROUP_REGEX='^[a-z_][a-z0-9._-]*[$]?$'
+USERNAME_REGEX='^[a-z_][a-z0-9._-]*[$]?$'
+
+echo
+echo "=============================================="
+echo " Manual /etc/group Entry"
+echo "=============================================="
+echo
+
+echo "You will create ONE normal local group."
+echo
+echo "Required format:"
+echo
+echo "groupname:x:GID:user1,user2"
+echo
+echo "The 'x' field will automatically be set."
+
+# ------------------------------------------------------------
+# Group name
+# ------------------------------------------------------------
+
+read -r -p "Group name: " GROUPNAME
+
+if [[ ! "$GROUPNAME" =~ $GROUP_REGEX ]]; then
+    echo "ERROR: Invalid group name."
+    exit 1
+fi
+
+case "$GROUPNAME" in
+    root|wheel|adm|bin|daemon|sys|tty|disk|mail|operator|users|sudo)
+        echo "ERROR: Reserved/privileged group is not allowed."
+        exit 1
+        ;;
+esac
+
+if getent group "$GROUPNAME" >/dev/null 2>&1; then
+    echo "ERROR: Group '$GROUPNAME' already exists."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# GID
+# ------------------------------------------------------------
+
+read -r -p "GID: " USER_GID
+
+if [[ ! "$USER_GID" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: GID must be numeric."
+    exit 1
+fi
+
+if [ "$USER_GID" -lt 1000 ]; then
+    echo "ERROR: GID must be 1000 or greater."
+    echo "System/service groups are not permitted."
+    exit 1
+fi
+
+if [ "$USER_GID" -gt 60000 ]; then
+    echo "ERROR: GID is outside the permitted range."
+    exit 1
+fi
+
+if getent group "$USER_GID" >/dev/null 2>&1; then
+    echo "ERROR: GID '$USER_GID' is already in use."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Group members
+# ------------------------------------------------------------
+
+echo
+echo "Enter usernames separated by commas."
+echo "Leave blank if the group has no supplementary members."
+echo
+
+read -r -p "Members: " MEMBERS
+
+if [ -n "$MEMBERS" ]; then
+
+    IFS=',' read -ra MEMBER_LIST <<< "$MEMBERS"
+
+    for USERNAME in "${MEMBER_LIST[@]}"
+    do
+
+        # Remove accidental whitespace.
+        USERNAME="${USERNAME//[[:space:]]/}"
+
+        if [[ ! "$USERNAME" =~ $USERNAME_REGEX ]]; then
+            echo "ERROR: Invalid username '$USERNAME'."
+            exit 1
+        fi
+
+        if ! getent passwd "$USERNAME" >/dev/null 2>&1; then
+            echo "ERROR: User '$USERNAME' does not exist."
+            exit 1
+        fi
+
+        UID_VALUE=$(id -u "$USERNAME")
+
+        if [ "$UID_VALUE" -lt 1000 ]; then
+            echo "ERROR: System/service user '$USERNAME' cannot be added."
+            exit 1
+        fi
+
+    done
+
+fi
+
+# ------------------------------------------------------------
+# Final validation
+# ------------------------------------------------------------
+
+echo
+echo "----------------------------------------------"
+echo "Review /etc/group entry"
+echo "----------------------------------------------"
+echo
+echo "Group   : $GROUPNAME"
+echo "GID     : $USER_GID"
+echo "Members : $MEMBERS"
+echo
+echo "Entry:"
+echo "$GROUPNAME:x:$USER_GID:$MEMBERS"
+echo
+
+read -r -p "Add this entry to /etc/group? [y/N]: " ANSWER
+
+case "$ANSWER" in
+    y|Y)
+        ;;
+    *)
+        echo "Entry creation cancelled."
+        exit 0
+        ;;
+esac
+
+# ------------------------------------------------------------
+# Final duplicate checks
+# ------------------------------------------------------------
+
+if getent group "$GROUPNAME" >/dev/null 2>&1; then
+    echo "ERROR: Group was created by another process."
+    exit 1
+fi
+
+if getent group "$USER_GID" >/dev/null 2>&1; then
+    echo "ERROR: GID was assigned by another process."
+    exit 1
+fi
+
+# ------------------------------------------------------------
+# Append entry
+# ------------------------------------------------------------
+
+printf '%s\n' "$GROUPNAME:x:$USER_GID:$MEMBERS" >> "$GROUP_FILE"
+
+echo
+echo "SUCCESS: Group entry added to /etc/group."
+echo
+echo "Verify with:"
+echo "  getent group $GROUPNAME"
+echo "  grep '^{$GROUPNAME}:' /etc/group"
+echo
+
+exit 0

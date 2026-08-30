@@ -1,0 +1,30 @@
+#!/bin/bash
+
+REAL="/usr/sbin/useradd"
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: sudo useradd <username>"
+    exit 1
+fi
+
+USERNAME="$1"
+
+if [[ ! "$USERNAME" =~ ^[a-zA-Z][a-zA-Z0-9._-]{0,31}$ ]]; then
+    echo "ERROR: Invalid username."
+    exit 1
+fi
+
+if getent passwd "$USERNAME" >/dev/null 2>&1; then
+    echo "ERROR: User '$USERNAME' already exists."
+    exit 1
+fi
+
+case "$USERNAME" in
+    root|bin|daemon|adm|lp|sync|shutdown|halt|mail|operator|games|ftp|nobody|dbus|tss|sshd|chrony|apache|named|rpc|rpcuser|nfsnobody|systemd-network|systemd-oom|systemd-resolve|systemd-timesync)
+        echo "ERROR: Reserved/system username is not allowed."
+        exit 1
+        ;;
+esac
+
+# Always create a normal user with a home directory.
+exec "$REAL" -m "$USERNAME"
