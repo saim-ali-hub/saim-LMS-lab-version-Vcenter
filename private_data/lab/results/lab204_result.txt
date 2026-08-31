@@ -685,3 +685,5 @@ Sr.#  Name                      Date                   Total  Passed Percentage
 681   sumara.abbas              2026-08-29 09:24:15    10     10     100%      
 682   fatima.tabusum            2026-08-29 11:53:54    10     1      10%       
 683   khawar.abbas              2026-08-29 13:14:49    10     9      90%       
+684   muhammad.jahanzaib        2026-08-30 06:16:39    10     9      90%       
+685   aqsa.mian                 2026-08-31 01:28:54    10     10     100%      

@@ -548,3 +548,6 @@ Sr.#  Name                      Date                   Total  Passed Percentage
 544   fatima.tabusum            2026-08-29 11:53:33    14     0      0%        
 545   khawar.abbas              2026-08-29 13:14:42    14     14     100%      
 546   fatima.tabusum            2026-08-29 14:23:46    14     0      0%        
+547   qasim.abbas               2026-08-30 01:53:58    14     11     79%       
+548   aqsa.mian                 2026-08-31 01:28:48    14     14     100%      
+549   awais.afzal               2026-08-31 04:29:34    14     14     100%      

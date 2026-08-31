@@ -903,3 +903,6 @@ Sr.#  Name                      Date                   Total  Passed Percentage
 899   ayesha.aslam              2026-08-29 06:18:51    15     15     100%      
 900   fatima.tabusum            2026-08-29 11:53:00    15     15     100%      
 901   amna.bajwa                2026-08-29 14:28:46    15     14     93%       
+902   muhammad.khan             2026-08-30 22:08:37    15     15     100%      
+903   aqsa.mian                 2026-08-31 01:27:56    15     15     100%      
+904   awais.afzal               2026-08-31 03:09:26    15     15     100%      

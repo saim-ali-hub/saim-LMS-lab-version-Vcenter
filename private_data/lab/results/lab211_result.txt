@@ -771,3 +771,10 @@ Sr.#  Name                      Date                   Total  Passed Percentage
 767   mahnoor.ali               2026-08-29 15:22:38    16     15     94%       
 768   muhammad.shoaib           2026-08-29 15:24:53    16     16     100%      
 769   haroon.elahi              2026-08-29 15:26:46    16     13     81%       
+770   waqar.zahoor              2026-08-30 13:34:52    16     16     100%      
+771   waqar.zahoor              2026-08-30 14:07:37    16     15     94%       
+772   waqar.zahoor              2026-08-30 14:07:48    16     15     94%       
+773   waqar.zahoor              2026-08-30 14:09:43    16     16     100%      
+774   waqar.zahoor              2026-08-30 14:10:01    16     16     100%      
+775   aqsa.mian                 2026-08-31 01:58:11    16     14     88%       
+776   mohsin.mahmood            2026-08-31 04:19:17    16     4      25%       

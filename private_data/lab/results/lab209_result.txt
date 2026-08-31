@@ -541,3 +541,5 @@ Sr.#  Name                      Date                   Total  Passed Percentage
 537   yuliana.cuzzi             2026-08-29 16:04:29    28     13     46%       
 538   yuliana.cuzzi             2026-08-29 16:22:28    28     13     46%       
 539   nimat.ullah               2026-08-29 22:05:16    28     25     89%       
+540   nimat.ullah               2026-08-30 21:17:00    28     20     71%       
+541   aqsa.mian                 2026-08-31 01:30:14    28     27     96%       

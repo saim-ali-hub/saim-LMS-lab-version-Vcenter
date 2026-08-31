@@ -91,6 +91,12 @@ case "$LAB_NUMBER" in
     lab214)
         validate_lab214_morning_incident
         ;;
+    lab215)
+        validate_lab215_process_management
+        ;;
+    lab216)
+        validate_lab216_advanced_process_management
+        ;;
     *)
 
         echo "Invalid lab: $LAB_NUMBER"

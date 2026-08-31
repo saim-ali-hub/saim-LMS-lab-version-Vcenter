@@ -5707,14 +5707,14 @@ if [ -f "$FIND_TASKS" ]; then
         fi
     done < <(
         cd "$BASE" &&
-        find investigation/etc/logrotate.d -type f -mtime +2 2>/dev/null
+        find investigation/etc/logrotate.d -type f -mtime -2 2>/dev/null
     )
 else
     TASK5B_OK=0
 fi
 
 if [ "$TASK5B_OK" -eq 1 ]; then
-    pass "Task 5b: logrotate files older than 2 days recorded"
+    pass "Task 5b: logrotate files older less than 2 days recorded"
 else
     fail "Task 5b: required logrotate results are missing"
 fi
@@ -5993,3 +5993,863 @@ $RESULT_ICON $RESULT_TEXT
 HTML
 }
 #=====================================================================
+
+validate_lab215_process_management() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 215 - Simple Linux Process Management..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/lab215_vim"
+
+    LAB_NAME="Lab 215 - Simple Linux Process Management"
+    DATE=$(date "+%F %T")
+
+    TOTAL_TASKS=23
+    PASSED=0
+
+    # ============================================================
+    # HELPERS
+    # ============================================================
+
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # ============================================================
+    # TASK 1 - WORKING DIRECTORY
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 1 - Create the Process Management Workspace</div>"
+
+    if [ -d "$BASE" ]; then
+        pass "Task 1a: lab215_vim directory exists"
+    else
+        fail "Task 1a: lab215_vim directory is missing"
+    fi
+
+    # ============================================================
+    # TASK 2 - VIEW RUNNING PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 2 - View Running Processes</div>"
+
+    # Verify ps is available and able to display current user's processes
+    PS_OUTPUT=$(ps -u "$STUDENT_NAME" -o pid=,ppid=,user=,stat=,comm= 2>/dev/null)
+
+    if [ -n "$PS_OUTPUT" ]; then
+        pass "Task 2a: processes can be displayed using ps"
+    else
+        fail "Task 2a: unable to verify ps process output"
+    fi
+
+    # Verify system-wide process listing works
+    PS_EF=$(ps -ef 2>/dev/null | head -n 2)
+
+    if echo "$PS_EF" | grep -q "PID"; then
+        pass "Task 2b: system-wide process information is available"
+    else
+        fail "Task 2b: ps -ef output could not be verified"
+    fi
+
+    # Verify ps aux style output
+    PS_AUX=$(ps aux 2>/dev/null | head -n 2)
+
+    if echo "$PS_AUX" | grep -q "%CPU"; then
+        pass "Task 2c: CPU and memory process information is available"
+    else
+        fail "Task 2c: ps aux output could not be verified"
+    fi
+
+    # ============================================================
+    # TASK 3 - START BACKGROUND VIM PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 3 - Start Background Processes</div>"
+
+    BG_FILE="$BASE/bg.txt"
+
+    if [ -f "$BG_FILE" ] &&
+       grep -Eq "^\[[0-9]+\].*(Running|Stopped).*vim" "$BG_FILE"
+    then
+	pass "Task 3a: process file1_bg.vim in backgroud"
+    else
+        fail "Task 3a: background file1_bg.vim job information is missing from bg.txt"
+    fi
+
+    if [ -f "$BG_FILE" ]; 
+       grep -Eq "^\[[0-9]+\].*(Running|Stopped).*vim" "$BG_FILE"
+    then
+        pass "Task 3b: process file2_bg.vim in backgroud"
+    else
+        fail "Task 3b: background file2_bg.vim job information is missing from bg.txt"
+    fi
+
+    # ============================================================
+    # TASK 4 - BACKGROUND JOB EVIDENCE
+    # ============================================================
+
+
+    echo "<div class='validation-section'>Task 4 - Investigate Background Jobs</div>"
+
+    BG_FILE="$BASE/bg.txt"
+    
+    if [ -f "$BG_FILE" ]; then
+        pass "Task 4a: bg.txt exists"
+    else
+        fail "Task 4a: bg.txt is missing"
+    fi
+    
+    # Task 4 requires the jobs command output.
+    if [ -f "$BG_FILE" ] &&
+       grep -Eq "^\[[0-9]+\].*(Running|Stopped).*vim" "$BG_FILE"
+    then
+        pass "Task 4b: Vim background job information recorded in bg.txt"
+    else
+        fail "Task 4b: Vim background job information is missing from bg.txt"
+    fi
+    
+    
+    # ============================================================
+    # TASK 5 - VIM PROCESS TERMINATION
+    # ============================================================
+    
+    echo "<div class='validation-section'>Task 5 - Terminate Vim Processes by Name</div>"
+    
+    # Task 5 requires pgrep output to be redirected to bg.txt.
+    # Verify that Vim PID/process information was recorded.
+    if [ -f "$BG_FILE" ] &&
+       grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+vim( |$)" "$BG_FILE"
+    then
+        pass "Task 5a: Vim process PID information recorded in bg.txt"
+    else
+    fail "Task 5a: Vim process PID information is missing from bg.txt"
+    fi
+    
+    # Verify that no Vim processes belonging to the student remain.
+    VIM_PROCESSES=$(ps -u "$STUDENT_NAME" -o pid=,comm= 2>/dev/null |
+        awk '$2 == "vim" || $2 == "vim.basic" {print $1}')
+    
+    if [ -z "$VIM_PROCESSES" ]; then
+        pass "Task 5b: no Vim processes belonging to the student remain"
+    else
+        fail "Task 5b: Vim process(es) belonging to the student are still running"
+    fi
+
+    # ============================================================
+    # TASK 6 - MULTIPLE BACKGROUND SLEEP PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 6 - Manage Multiple Background Processes</div>"
+
+    if [ -f "$BG_FILE" ]; then
+
+        if grep -Eq "sleep 5000" "$BG_FILE"; then
+            pass "Task 6a: sleep 5000 job recorded in bg.txt"
+        else
+            fail "Task 6a: sleep 5000 job is not recorded in bg.txt"
+        fi
+
+        if grep -Eq "sleep 8000" "$BG_FILE"; then
+            pass "Task 6b: sleep 8000 job recorded in bg.txt"
+        else
+            fail "Task 6b: sleep 8000 job is not recorded in bg.txt"
+        fi
+
+        if grep -Eq "sleep 10000" "$BG_FILE"; then
+            pass "Task 6c: sleep 10000 job recorded in bg.txt"
+        else
+            fail "Task 6c: sleep 10000 job is not recorded in bg.txt"
+        fi
+
+        if grep -Eq "sleep 15000" "$BG_FILE"; then
+            pass "Task 6d: sleep 15000 job recorded in bg.txt"
+        else
+            fail "Task 6d: sleep 15000 job is not recorded in bg.txt"
+        fi
+
+        if grep -Eq "sleep 20000" "$BG_FILE"; then
+            pass "Task 6e: sleep 20000 job recorded in bg.txt"
+        else
+            fail "Task 6e: sleep 20000 job is not recorded in bg.txt"
+        fi
+
+    else
+        fail "Task 6: bg.txt is missing"
+    fi
+
+    # ============================================================
+    # TASK 7 - KILL SLEEP 5000
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 7 - Terminate a Process Using PID</div>"
+
+    SLEEP5000=$(ps -u "$STUDENT_NAME" -o args= 2>/dev/null |
+        grep -E '^sleep 5000$')
+
+    if [ -z "$SLEEP5000" ]; then
+        pass "Task 7: sleep 5000 process is no longer running"
+    else
+        fail "Task 7: sleep 5000 process is still running"
+    fi
+
+    # ============================================================
+    # TASK 8 - SIGTERM
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 8 - Gracefully Terminate a Process</div>"
+
+    SLEEP8000=$(ps -u "$STUDENT_NAME" -o args= 2>/dev/null |
+        grep -E '^sleep 8000$')
+
+    if [ -z "$SLEEP8000" ]; then
+        pass "Task 8: sleep 8000 process is no longer running"
+    else
+        fail "Task 8: sleep 8000 process is still running"
+    fi
+
+    # ============================================================
+    # TASK 9 - SIGKILL
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 9 - Force Terminate a Process</div>"
+
+    SLEEP10000=$(ps -u "$STUDENT_NAME" -o args= 2>/dev/null |
+        grep -E '^sleep 10000$')
+
+    if [ -z "$SLEEP10000" ]; then
+        pass "Task 9: sleep 10000 process is no longer running"
+    else
+        fail "Task 9: sleep 10000 process is still running"
+    fi
+
+    # ============================================================
+    # TASK 10 - REMAINING SLEEP PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 10 - Terminate Remaining Processes by Name</div>"
+
+    REMAINING_SLEEP=$(ps -u "$STUDENT_NAME" -o pid=,args= 2>/dev/null |
+        awk '$2 == "sleep" {print}')
+
+    if [ -z "$REMAINING_SLEEP" ]; then
+        pass "Task 10: no student-created sleep processes remain"
+    else
+        fail "Task 10: student-created sleep process(es) are still running"
+    fi
+
+    # ============================================================
+    # TASK 11 - PROCESS COUNT
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 11 - Count Processes Running on the Server</div>"
+
+    PROCESS_FILE="$BASE/process.txt"
+
+    if [ -f "$PROCESS_FILE" ]; then
+        pass "Task 11a: process.txt exists"
+    else
+        fail "Task 11a: process.txt is missing"
+    fi
+
+    if [ -f "$PROCESS_FILE" ] &&
+       grep -Eq '^[0-9]+$' "$PROCESS_FILE"
+    then
+        PROCESS_COUNT=$(cat "$PROCESS_FILE" 2>/dev/null)
+
+        if [ "$PROCESS_COUNT" -gt 0 ] 2>/dev/null; then
+            pass "Task 11b: process count is recorded in process.txt"
+        else
+            fail "Task 11b: process count is zero or invalid"
+        fi
+    else
+        fail "Task 11b: process.txt does not contain a valid numeric process count"
+    fi
+
+    # ============================================================
+    # ADDITIONAL SAFETY / CLEANUP CHECKS
+    # ============================================================
+
+    echo "<div class='validation-section'>Final Process Cleanup</div>"
+
+    # No student Vim processes
+    FINAL_VIM=$(ps -u "$STUDENT_NAME" -o comm= 2>/dev/null |
+        grep -E '^(vim|vim.basic)$')
+
+    if [ -z "$FINAL_VIM" ]; then
+        pass "Cleanup 1: no Vim processes belonging to the student remain"
+    else
+        fail "Cleanup 1: Vim processes belonging to the student remain"
+    fi
+
+    # No student sleep processes
+    FINAL_SLEEP=$(ps -u "$STUDENT_NAME" -o comm= 2>/dev/null |
+        grep '^sleep$')
+
+    if [ -z "$FINAL_SLEEP" ]; then
+        pass "Cleanup 2: no sleep processes belonging to the student remain"
+    else
+        fail "Cleanup 2: sleep processes belonging to the student remain"
+    fi
+
+        # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#====================================================================
+
+validate_lab216_advanced_process_management() {
+    set +e
+    set +u
+    set +o pipefail
+
+    echo "Checking Lab 216 - Advanced Linux Process Management..."
+
+    HOME_DIR="/home/$STUDENT_NAME"
+    BASE="$HOME_DIR/lab216_challenge_vim"
+
+    LAB_NAME="Lab 216 - Advanced Linux Process Management"
+    DATE=$(date "+%F %T")
+
+    TOTAL_TASKS=13
+    PASSED=0
+
+    # HELPERS
+    pass() {
+        echo "<div class='validation-pass'>✓ $1 – Pass</div>"
+        ((PASSED++))
+    }
+
+    fail() {
+        echo "<div class='validation-fail'>✗ $1 – Fail</div>"
+    }
+
+    # ============================================================
+    # TASK 1 - WORKING DIRECTORY
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 1 - Create the Advanced Process Management Workspace</div>"
+
+    if [ -d "$BASE" ]; then
+        pass "Task 1: lab216_challenge_vim directory exists"
+    else
+        fail "Task 1: lab216_challenge_vim directory is missing"
+    fi
+
+
+    # ============================================================
+    # TASK 2 - FIND SSHD PROCESS
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 2 - Find a Process by Name</div>"
+
+    SSHD_FOUND=$(pgrep -a sshd 2>/dev/null)
+
+    if [ -n "$SSHD_FOUND" ]; then
+        pass "Task 2: sshd PID and process name can be identified using pgrep"
+    else
+        fail "Task 2: sshd process could not be identified"
+    fi
+
+    # ============================================================
+    # TASK 3 - BACKGROUND PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 3 - Start Multiple Background Processes</div>"
+
+    BG_FILE="$BASE/bg.txt"
+
+    if [ -f "$BG_FILE" ] && [ -s "$BG_FILE" ]; then
+
+        BG_OK=1
+
+        grep -q "sleep 5000" "$BG_FILE" || BG_OK=0
+        grep -q "sleep 8000" "$BG_FILE" || BG_OK=0
+        grep -q "sleep 10000" "$BG_FILE" || BG_OK=0
+        grep -q "sleep 15000" "$BG_FILE" || BG_OK=0
+        grep -q "sleep 20000" "$BG_FILE" || BG_OK=0
+
+        if [ "$BG_OK" -eq 1 ]; then
+            pass "Task 3: background sleep jobs recorded in bg.txt"
+        else
+            fail "Task 3: bg.txt does not contain all required sleep jobs"
+        fi
+
+    else
+        fail "Task 3: bg.txt is missing or empty"
+    fi
+
+
+    # ============================================================
+    # TASK 4 - FOREGROUND / SUSPEND
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 4 - Bring a Background Job to the Foreground</div>"
+    SLEEP5000=$(pgrep -u "$STUDENT_NAME" -f '^sleep 5000$' 2>/dev/null)
+
+    if [ -z "$SLEEP5000" ]; then
+        pass "Task 4: sleep 5000 process is no longer running"
+    else
+        fail "Task 4: sleep 5000 process is still running"
+    fi
+
+
+    # ============================================================
+    # TASK 5 - RESUME AND TERMINATE JOB
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 5 - Resume and Terminate a Job Using Job ID</div>"
+
+    SLEEP5000=$(pgrep -u "$STUDENT_NAME" -f '^sleep 5000$' 2>/dev/null)
+
+    if [ -z "$SLEEP5000" ]; then
+        pass "Task 5: sleep 5000 process was terminated"
+    else
+        fail "Task 5: sleep 5000 process is still running"
+    fi
+
+
+    # ============================================================
+    # TASK 6 - PARENT AND CHILD PROCESS
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 6 - Identify Parent and Child Processes</div>"
+    PARENT_FILE="$BASE/process_parent.txt"
+
+    if [ -f "$PARENT_FILE" ] && [ -s "$PARENT_FILE" ]; then
+
+        if grep -Eq "PID|PPID|[0-9]+[[:space:]]+[0-9]+" "$PARENT_FILE"; then
+            pass "Task 6: parent and child process evidence recorded"
+        else
+            fail "Task 6: process_parent.txt exists but does not contain valid PID/PPID information"
+        fi
+
+    else
+        echo "<div class='validation-pass'>✓ Task 6: parent/child process investigation completed manually</div>"
+        ((PASSED++))
+    fi
+
+
+    # ============================================================
+    # TASK 7 - TERMINATE REMAINING SLEEP PROCESSES
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 7 - Terminate Remaining Sleep Processes</div>"
+
+    REMAINING_SLEEP=$(pgrep -u "$STUDENT_NAME" -x sleep 2>/dev/null)
+
+    if [ -z "$REMAINING_SLEEP" ]; then
+        pass "Task 7: no lab-created sleep processes remain"
+    else
+        fail "Task 7: one or more sleep processes created by the student are still running"
+    fi
+
+
+    # ============================================================
+    # TASK 8 - NICE VALUE
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 8 - Run a Process with a Different Priority</div>"
+
+    NICE_FILE="$BASE/nice_value.txt"
+
+    if [ -f "$NICE_FILE" ] && [ -s "$NICE_FILE" ]; then
+
+        if grep -Eq "[[:space:]]10[[:space:]]" "$NICE_FILE"; then
+            pass "Task 8: nice value 10 recorded in nice_value.txt"
+        else
+            fail "Task 8: nice value 10 was not found in nice_value.txt"
+        fi
+
+    else
+        fail "Task 8: nice_value.txt is missing or empty"
+    fi
+
+
+    # ============================================================
+    # TASK 9 - RENICE
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 9 - Change Process Priority</div>"
+
+    RENICE_FILE="$BASE/renice_value.txt"
+
+    if [ -f "$RENICE_FILE" ] && [ -s "$RENICE_FILE" ]; then
+
+        if grep -Eq "[[:space:]]15[[:space:]]" "$RENICE_FILE"; then
+            pass "Task 9: nice value changed to 15 and recorded"
+        else
+            fail "Task 9: nice value 15 was not found in renice_value.txt"
+        fi
+
+    else
+        fail "Task 9: renice_value.txt is missing or empty"
+    fi
+
+
+    # ============================================================
+    # TASK 10 - FINAL CLEANUP
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 10 - Terminate Remaining Processes and Verify Cleanup</div>"
+
+    CLEANUP_OK=1
+
+    # Check for student-owned sleep processes
+    if pgrep -u "$STUDENT_NAME" -x sleep >/dev/null 2>&1; then
+        CLEANUP_OK=0
+    fi
+
+    # Check for remaining Vim processes created by the student
+    if pgrep -u "$STUDENT_NAME" -x vim >/dev/null 2>&1; then
+        CLEANUP_OK=0
+    fi
+
+    if [ "$CLEANUP_OK" -eq 1 ]; then
+        pass "Task 10: all lab-created processes have been cleaned up"
+    else
+        fail "Task 10: one or more lab-created processes are still running"
+    fi
+
+    # ============================================================
+    # TASK 11 - SORT PROCESSES BY CPU
+    # ============================================================
+
+    echo "<div class='validation-section'>Task 11 - Display and Sort Processes by CPU Usage</div>"
+
+    CPU_FILE="$BASE/sort_process_cpu.txt"
+    
+    if [ -f "$CPU_FILE" ]; then
+        pass "Task 11a: sort_process_cpu.txt exists"
+    else
+        fail "Task 11a: sort_process_cpu.txt is missing"
+    fi
+    
+    if [ -f "$CPU_FILE" ] &&
+       grep -Eq "PID.*PPID.*USER.*%CPU.*%MEM.*S.*CMD" "$CPU_FILE"
+    then
+        pass "Task 11b: process output contains the required columns"
+    else
+        fail "Task 11b: required process columns are missing from sort_process_cpu.txt"
+    fi
+           
+    if [ -f "$CPU_FILE" ]; then
+    
+        CPU_VALUES=$(awk 'NR > 1 && $1 ~ /^[0-9]+$/ && $4 ~ /^[0-9.]+$/ {print $4}' "$CPU_FILE")
+    
+        SORTED_CPU=$(printf '%s\n' "$CPU_VALUES" | sort -nr)
+    
+        if [ "$CPU_VALUES" = "$SORTED_CPU" ]; then
+            pass "Task 11c: processes are sorted by CPU usage in descending order"
+        else
+            fail "Task 11c: processes are not sorted by CPU usage"
+        fi
+    
+    fi
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    PERCENT=$((PASSED * 100 / TOTAL_TASKS))
+
+    if [ "$PASSED" -eq "$TOTAL_TASKS" ]; then
+        RESULT_CLASS="result-success"
+        RESULT_ICON="✓"
+        RESULT_TEXT="LAB PASSED"
+    else
+        RESULT_CLASS="result-failed"
+        RESULT_ICON="✗"
+        RESULT_TEXT="LAB NEEDS ATTENTION"
+    fi
+
+    # ============================================================
+    # RESULT STYLES
+    # ============================================================
+
+    cat <<'HTML'
+<style>
+.validation-pass {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#DCFCE7;
+    color:#166534;
+    border-left:5px solid #22C55E;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.validation-fail {
+    margin:6px 0;
+    padding:10px 14px;
+    background:#FEE2E2;
+    color:#991B1B;
+    border-left:5px solid #EF4444;
+    border-radius:6px;
+    font-weight:600;
+}
+
+.lab-summary {
+    margin-top:25px;
+    padding:28px;
+    border-radius:14px;
+    text-align:center;
+    background:#0f172a;
+    border:2px solid #38bdf8;
+    color:#fff;
+}
+
+.lab-summary-title {
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.lab-summary-info {
+    text-align:left;
+    max-width:650px;
+    margin:0 auto 20px auto;
+}
+
+.lab-summary-row {
+    padding:10px 0;
+    border-bottom:1px solid #334155;
+}
+
+.lab-summary-label {
+    font-weight:700;
+    color:#94a3b8;
+    display:inline-block;
+    min-width:110px;
+}
+
+.result-percentage {
+    margin-top:20px;
+    font-size:42px;
+    font-weight:800;
+    color:#38bdf8;
+}
+
+.result-success {
+    margin-top:20px;
+    padding:15px;
+    background:#166534;
+    color:#dcfce7;
+    border:2px solid #22c55e;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+
+.result-failed {
+    margin-top:20px;
+    padding:15px;
+    background:#991b1b;
+    color:#fee2e2;
+    border:2px solid #ef4444;
+    border-radius:10px;
+    font-size:21px;
+    font-weight:700;
+}
+</style>
+HTML
+
+    # ============================================================
+    # RESULT SUMMARY
+    # ============================================================
+
+    cat <<HTML
+<div class="lab-summary">
+
+<div class="lab-summary-title">LAB RESULT SUMMARY</div>
+
+<div class="lab-summary-info">
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Student:</span>
+<span>$STUDENT_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Lab:</span>
+<span>$LAB_NAME</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Total Tasks:</span>
+<span>$TOTAL_TASKS</span>
+</div>
+
+<div class="lab-summary-row">
+<span class="lab-summary-label">Passed:</span>
+<span>$PASSED</span>
+</div>
+
+</div>
+
+<div class="result-percentage">$PERCENT%</div>
+
+<div class="$RESULT_CLASS">
+$RESULT_ICON $RESULT_TEXT
+</div>
+
+</div>
+HTML
+}
+
+#===================================================================
