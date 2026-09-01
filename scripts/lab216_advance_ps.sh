@@ -246,7 +246,7 @@ jobs
 echo
 echo "Task 11 - Processes Sorted by CPU Usage"
 
-ps -eo pid,ppid,user,%cpu,%mem,state,cmd --sort=-%cpu >> sort_process_cpu.txt 
+ps -eo pid,ppid,user,%cpu,%mem,state,cmd --sort=-%cpu > sort_process_cpu.txt 
 
 # ============================================================
 # FINAL VERIFICATION
